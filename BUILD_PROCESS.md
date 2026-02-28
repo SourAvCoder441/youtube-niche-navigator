@@ -158,3 +158,49 @@ The next steps will focus on:
 - Ranking clarity
 - Web interface integration
 - Improved testing
+
+
+## Day 5 – Core Engine Enhancement (Day 2 of focused build)
+
+After establishing the foundation, I focused on three critical gaps:
+1. **Explanation capability** – The "why" behind recommendations
+2. **Sensitivity analysis** – Understanding recommendation robustness  
+3. **Input validation** – Production-ready error handling
+
+### Morning: Explanation Module Design
+
+I realized the system was calculating scores but not communicating reasoning effectively. The assignment specifically asks to "explain why a particular recommendation was made."
+
+**Design decisions:**
+- Structured explanations with: summary, strengths, concerns, risk context, recommendation
+- Context-aware messaging (different text for high vs low scores)
+- No templated strings – dynamic generation based on actual contributions
+- Deterministic logic: same scores always produce same explanations
+
+**Rejected approach:** Using AI/LLM to generate explanations.
+**Reason:** Would violate explainability constraint and create non-deterministic outputs.
+
+### Afternoon: Sensitivity Analysis Implementation
+
+This was my "above and beyond" feature. I wanted to answer: *"How confident should the user be in this recommendation?"*
+
+**Algorithm design:**
+- Perturb each weight by ±15% across multiple iterations
+- Track position stability for each niche
+- Calculate variance and most common ranking
+- Identify scenarios where a different niche would win
+
+**Key insight:** If small changes in priorities flip the recommendation, the decision is sensitive and requires more user reflection.
+
+**Implementation challenge:** Ensuring perturbations stayed within 1-10 range while maintaining weight ratios.
+**Solution:** Clamp individual weights before normalization, not after.
+
+### Evening: Validation & Integration
+
+Added defensive programming:
+- `validator.py` with comprehensive input checking
+- Custom `ValidationError` for clear error messaging
+- Updated `manual_test.py` to demonstrate all features
+
+**Refactoring decision:** Updated niche structure to separate `attributes` from `metadata`.
+**Why:** Cleaner separation of concerns – scoring engine only needs attributes, explanation module benefits from metadata.
