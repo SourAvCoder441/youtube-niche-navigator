@@ -32,6 +32,7 @@ NicheNavigator evaluates predefined YouTube niches using:
 - Normalized scoring
 - Risk modeling
 - Ranked recommendations (Top 3)
+- **Comparative explanations** with percentile rankings
 
 The system is deterministic and does not rely on black-box AI for final decision-making.
 
@@ -41,11 +42,12 @@ The system is deterministic and does not rely on black-box AI for final decision
 
 The system is divided into modular components:
 
-1. Web Layer (Flask Interface – upcoming)
+1. Web Layer (Flask Interface – Day 4)
 2. Decision Engine (Scoring Logic)
 3. Weight Adjustment Module
 4. Risk Analysis Module
-5. Explanation Module
+5. Explanation Module (with comparison context)
+6. Sensitivity Analysis Module
 
 The decision engine is fully independent of the web layer for testability and modularity.
 
@@ -98,19 +100,28 @@ Risk Levels:
 
 - ≥ 7 → High
 - 4–7 → Moderate
-- < 4 → Low
+- &lt; 4 → Low
 
 ---
 
 ## 7. Modeled Niches
 
-The system currently evaluates:
+The system evaluates 10 niches across the risk/reward spectrum:
 
-1. Coding Tutorials
-2. AI Tools & Tech Explainers
-3. Gaming Content
+| Niche | Skill | Competition | Key Characteristic |
+|-------|-------|-------------|-------------------|
+| Coding Tutorials | 9 | 8 | Technical expertise required |
+| AI Tools & Tech Explainers | 8 | 6 | Trending, fast monetization |
+| Gaming Content | 5 | 9 | High competition, entertainment-driven |
+| Personal Finance | 7 | 7 | High trust barrier, strong CPM |
+| Creative Design | 8 | 6 | Portfolio-based, visual skill |
+| Health & Fitness | 6 | 8 | YMYL category, results-based credibility |
+| Productivity & Lifestyle | 4 | 9 | Low barrier, "beginner trap" |
+| Book Reviews & Literature | 5 | 5 | Minimal investment, slow growth |
+| Business & Entrepreneurship | 7 | 7 | Credibility-dependent, high monetization |
+| Science & Education | 9 | 5 | High accuracy, expertise barrier |
 
-These niches were selected to represent varying trade-offs in competition, monetization, and effort.
+These niches were selected to represent varying trade-offs in competition, monetization, effort, and risk profiles.
 
 ---
 
@@ -118,12 +129,12 @@ These niches were selected to represent varying trade-offs in competition, monet
 
 The scoring values assigned to each niche are structured estimates based on:
 
-- Observed YouTube ecosystem patterns
-- Creator economy trends
+- Observed YouTube ecosystem patterns (2024-2025)
+- Creator economy trends and CPM data
 - General market behavior
 - Category saturation characteristics
 
-The system prioritizes relative comparison rather than exact prediction.
+The system prioritizes **relative comparison** rather than exact prediction.
 
 ---
 
@@ -133,6 +144,7 @@ The system prioritizes relative comparison rather than exact prediction.
 - Real-world outcomes depend heavily on execution quality.
 - Market dynamics evolve rapidly.
 - Personal differentiation strategies are not modeled.
+- 10 niches provide coverage but not exhaustive options.
 
 ---
 
@@ -144,13 +156,31 @@ The system prioritizes relative comparison rather than exact prediction.
 3. Run tests:
    python -m tests.manual_test
 
-(Flask web interface integration coming next.)
+(Day 4: Web interface with prompt-based input coming next.)
 
 ---
 
 ## 11. Future Improvements
 
-- Sensitivity analysis visualization
-- Dynamic niche expansion
-- Structured AI-assisted explanation generation
-- Data-driven niche modeling using public datasets
+- [x] Sensitivity analysis
+- [x] Dynamic niche expansion (10 niches)
+- [x] Enhanced explanations with comparison context
+- [ ] Natural language prompt input
+- [ ] Web interface with interactive visualizations
+- [ ] Growth advisor module (post-selection guidance)
+- [ ] Data-driven niche modeling using public datasets
+
+---
+
+## 12. Decision Transparency
+
+### Why deterministic scoring over AI?
+
+We explicitly chose weighted multi-criteria decision analysis (MCDA) because:
+- **Explainability**: Every score can be traced to specific criteria weights
+- **User control**: Users can adjust weights and immediately see impact
+- **No data dependency**: Works without training data or API calls
+- **Predictable behavior**: Same inputs always produce same outputs
+
+### Scoring Formula
+For each niche N:
