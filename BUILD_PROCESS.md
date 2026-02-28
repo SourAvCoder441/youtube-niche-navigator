@@ -167,7 +167,6 @@ After establishing the foundation, I focused on three critical gaps:
 2. **Sensitivity analysis** – Understanding recommendation robustness  
 3. **Input validation** – Production-ready error handling
 
-### Morning: Explanation Module Design
 
 I realized the system was calculating scores but not communicating reasoning effectively. The assignment specifically asks to "explain why a particular recommendation was made."
 
@@ -180,7 +179,6 @@ I realized the system was calculating scores but not communicating reasoning eff
 **Rejected approach:** Using AI/LLM to generate explanations.
 **Reason:** Would violate explainability constraint and create non-deterministic outputs.
 
-### Afternoon: Sensitivity Analysis Implementation
 
 This was my "above and beyond" feature. I wanted to answer: *"How confident should the user be in this recommendation?"*
 
@@ -195,7 +193,6 @@ This was my "above and beyond" feature. I wanted to answer: *"How confident shou
 **Implementation challenge:** Ensuring perturbations stayed within 1-10 range while maintaining weight ratios.
 **Solution:** Clamp individual weights before normalization, not after.
 
-### Evening: Validation & Integration
 
 Added defensive programming:
 - `validator.py` with comprehensive input checking
@@ -204,3 +201,55 @@ Added defensive programming:
 
 **Refactoring decision:** Updated niche structure to separate `attributes` from `metadata`.
 **Why:** Cleaner separation of concerns – scoring engine only needs attributes, explanation module benefits from metadata.
+
+
+## Day 6 – Niche Expansion & Output Clarity (Day 3 of focused build)
+
+Expanded from 3 to 10 niches and enhanced explanation depth.
+
+
+Researched 2024-2025 YouTube creator economy trends to identify high-potential niches with distinct risk profiles.
+
+**Selection criteria for new niches:**
+- Must fill gaps in current risk/reward spectrum
+- Must have clear differentiation from existing 3
+- Must maintain scoring anchor points (1-2 and 9-10 extremes)
+- Must represent viable creator paths with different barrier types
+
+**Added 7 niches:**
+1. **Personal Finance** – High trust barrier, strong monetization (YMYL category)
+2. **Creative Design** – Visual skill-based, portfolio-driven
+3. **Health & Fitness** – High responsibility, results-based credibility
+4. **Productivity & Lifestyle** – Low barrier, high competition (beginner trap)
+5. **Book Reviews** – Long tail, minimal investment, slow growth
+6. **Business/Entrepreneurship** – Credibility-dependent, high CPM
+7. **Science/Education** – High accuracy requirements, evergreen content
+
+**Scoring methodology:**
+- Used observed CPM data, competition saturation, and skill requirements
+- Ensured at least one niche at extremes for each criterion to maintain normalization quality
+- Cross-referenced with creator economy reports (no real-time scraping)
+
+
+Realized "why this niche" required **comparative context**, not just absolute scores.
+
+**Added to explanation module:**
+- **Percentile rankings**: Shows where niche stands vs all 10 options
+- **Category average comparison**: "40% above average" vs raw scores
+- **Runner-up analysis**: Specific wins/losses vs #2 ranked niche
+- **Trade-off identification**: Explicit "you win on X, they win on Y" language
+- **Swap potential indicator**: Flags when small priority shifts change winner
+
+**Design decision:** Explanations now require `all_niche_data` and `ranked_list` parameters.
+**Trade-off:** More complex function signature, but enables rich comparative context.
+
+**Rejected:** Simplifying to only show winner's explanation.
+**Reason:** Users need to understand why #2 lost to make informed trade-off decisions.
+
+
+Ran manual test with 10 niches to verify:
+- Normalization still effective with wider score distribution
+- Explanation comparisons generate meaningful context
+- Sensitivity analysis remains performant (10 niches × 6 criteria × perturbations)
+
+**Observed:** With 10 niches, sensitivity analysis becomes more valuable – more alternatives exist.
