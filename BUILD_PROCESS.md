@@ -253,3 +253,38 @@ Ran manual test with 10 niches to verify:
 - Sensitivity analysis remains performant (10 niches × 6 criteria × perturbations)
 
 **Observed:** With 10 niches, sensitivity analysis becomes more valuable – more alternatives exist.
+
+
+## Day 7 – Prompt Parser & Web Interface (Day 4 of focused build)
+
+Built natural language input system and Flask web layer.
+
+**Decision:** Keyword-based parsing with regex, not LLM classification.
+
+**Rationale:**
+- Deterministic: Same prompt → same weights (explainable)
+- No API dependency or latency
+- Transparent logic: Can trace why "coding" boosted skill weight
+
+**Implementation:**
+- Goal detection via keyword matching (side_income, long_term, passion)
+- Criterion extraction via pattern matching
+- Negation handling ("not technical" lowers skill weight)
+- Fallback to defaults with validation error if no signals found
+
+**Rejected:** Using LLM to generate weights directly.
+**Reason:** Violates core constraint - weights must be explainable and reproducible.
+
+**Endpoints:**
+- `POST /api/analyze` - Main decision endpoint
+- `GET /api/health` - Status check
+- `GET /` - HTML interface
+
+**Design decisions:**
+- Parser → Engine → Response pipeline
+- JSON API for flexibility (mobile app could use same backend)
+- Minimal HTML frontend for demonstration
+
+**Error handling:**
+- ValidationError (400) for unparseable prompts
+- Generic 500 for processing failures (don't expose internals)

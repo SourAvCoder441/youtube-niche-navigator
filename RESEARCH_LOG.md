@@ -254,5 +254,79 @@ The core system remains deterministic and explainable.
 - Added 3-month buffer for "realistic expectations" vs "optimistic potential"
 
 
+## Day 4 
+
+### 1. NLP Approach Selection
+
+**AI Prompts Used:**
+
+> "Compare approaches for extracting structured data from natural language: keyword extraction vs LLM classification vs rule-based parsing. Focus on determinism and explainability."
+
+**Response Summary:**
+- **Keyword extraction:** Fast, deterministic, transparent logic. Limited nuance.
+- **LLM classification:** Handles ambiguity, contextual understanding. Non-deterministic, API-dependent.
+- **Hybrid:** LLM for intent, rules for extraction. Complexity trade-off.
+
+**Decision:** Pure keyword extraction with regex patterns.
+
+**Rationale alignment:** Assignment requires explainability. LLM classification is a black box even if weights are applied correctly after.
+
+---
+
+### 2. Prompt Pattern Research
+
+**Search Queries:**
+- "natural language preference extraction patterns"
+- "how users describe priorities in text"
+- "negation detection in keyword matching"
+
+**Applied Patterns:**
+- Explicit values: "5 hours per day" → time weight boost
+- Implicit priorities: "good at coding" → skill weight boost
+- Negation: "not technical" → skill weight reduction
+- Goal keywords: "side income", "passion project", "career"
+
+---
+
+### 3. Flask Architecture
+
+**Reference:** Flask official documentation, API design patterns.
+
+**Decisions:**
+- Stateless API (no session storage)
+- JSON in/out for machine readability
+- Separate template for human interface
+- CORS-ready for future frontend separation
+
+---
+
+### 4. AI Usage – Day 4
+
+**Used for:**
+- Researching NLP approach trade-offs
+- Identifying common prompt patterns for priority expression
+- Flask best practices confirmation
+
+**Not used for:**
+- Parser implementation (manual keyword logic)
+- API endpoint logic
+- Any scoring or ranking
+
+**Prompt example:**
+> "What are common ways users express 'I don't have much time' or 'I want to make money' in natural language? List variations."
+
+**Response applied:**
+- Time constraints: "limited time", "busy", "part time", "no time"
+- Monetization: "side income", "extra money", "passive income", "earn"
+
+---
+
+### 5. Research Reflection
+
+**Boundary maintained:** AI informs design choices, never executes decisions.
+
+Parser is **peripheral layer** by design. Core engine untouched.
+
+
 
 
