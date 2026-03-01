@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NicheNavigator - YouTube Niche Advisor</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .prompt-box { width: 100%; height: 100px; margin: 10px 0; padding: 10px; }
+        button { padding: 10px 20px; background: #0066cc; color: white; border: none; cursor: pointer; }
+        .result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .rank-1 { background: #e8f5e9; border-color: #4caf50; }
+        .rank-2 { background: #e3f2fd; border-color: #2196f3; }
+        .rank-3 { background: #fff3e0; border-color: #ff9800; }
+        .parsed { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .loading { color: #666; font-style: italic; }
+        .error { color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🎯 NicheNavigator</h1>
+    <p>Describe your situation and goals. We'll recommend the best YouTube niche.</p>
+    
+    <textarea id="prompt" class="prompt-box" placeholder="Example: I'm good at coding but have limited time. I want side income and don't care about competition."></textarea>
+    <br>
+    <button onclick="analyze()">Analyze</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function analyze() {
+            const prompt = document.getElementById('prompt').value;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = '<p class="loading">Analyzing...</p>';
+            
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({prompt: prompt})
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    resultsDiv.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+                    return;
+                }
+                
+                let html = `<div class="parsed"><strong>Understood:</strong> ${data.parsed.parsed_intent}</div>`;
+                html += `<h3>Top Recommendations</h3>`;
+                
+                data.recommendations.forEach(rec => {
+                    html += `
+                        <div class="result rank-${rec.rank}">
+                            <h4>#${rec.rank} ${rec.name}</h4>
+                            <p>Score: ${rec.score} | Risk: ${rec.risk_level}</p>
+                            <p>${rec.explanation.summary}</p>
+                            ${rec.explanation.comparisons.length ? `
+                                <p><strong>Advantages:</strong> ${rec.explanation.comparisons.filter(c => c.advantage).map(c => c.message).join('; ')}</p>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += `<p><small>Confidence: ${data.sensitivity.confidence.level}</small></p>`;
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (err) {
+                resultsDiv.innerHTML = `<p class="error">Failed to analyze</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
