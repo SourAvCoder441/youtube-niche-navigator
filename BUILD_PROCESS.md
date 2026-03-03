@@ -288,3 +288,39 @@ Built natural language input system and Flask web layer.
 **Error handling:**
 - ValidationError (400) for unparseable prompts
 - Generic 500 for processing failures (don't expose internals)
+
+## Day 8 – UI Refinements, Refinement Questions, and Personalization Improvements (March 03, 2026)
+
+Today, focused on addressing UI usability issues and improving recommendation personalization to handle cases where passion/interest mismatches with side_income rankings (e.g., gamer getting finance niches).
+
+**Issue Identification:**
+- Dropdowns and analyze button not functioning correctly in some configurations.
+- Button enabled even without profession/goal selected, leading to generic recommendations (AI Tools, Personal Finance, Business).
+- Refinement questions needed for mismatches (e.g., gaming background but finance #1).
+- Interests like "gaming" not having strong enough effect to override profession.
+
+**UI Refinements:**
+- Added disable state to "Find My Best Niches" button until profession and goal selected (JS validation).
+- Improved tab switching and verification flow for free-form prompt.
+- Added score bars, notes, and badges to result cards for clearer visual feedback.
+
+**Refinement Logic Implementation:**
+- Added flag in /api/analyze to detect mismatches (side_income goal + non-top predicted niche).
+- Created /api/refine endpoint to re-score with user choice (fast/balanced/passion).
+- Adjustments:
+  - "fast": Keep original.
+  - "balanced": Reduce monetization/growth, boost skill/time.
+  - "passion": Force predicted niche + strong skill/time boost, reduce money pressure.
+
+**Parser Enhancements:**
+- Strengthened interest override: Entering "gaming" now forces Gaming Content as predicted niche + bigger boosts (+6 skill, +5 time, -4 monetization, -3 competition).
+
+**Testing & Observations:**
+- With gamer + side_income + "gaming" interest: Gaming now ranks higher (often #1 or #2).
+- Refinement question appears on mismatches; selecting "passion" pushes passion niche to top.
+- No-input runs prevented; UI feels more robust.
+
+**Rejected:** Making interest override 100% force #1 (too rigid — keeps some balance).
+**Reason:** User should still see objective trade-offs.
+
+**Trade-off:** Added one extra user click for mismatches, but improves personalization and satisfaction.

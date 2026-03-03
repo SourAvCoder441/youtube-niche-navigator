@@ -9,7 +9,7 @@ This document records all external references, AI prompts, and research inputs t
 The goal of this log is transparency — not justification.
 
 ---
-## Day 1
+## Day 1 - 2
 ## 1. Assignment Interpretation
 
 Tool Used:
@@ -133,7 +133,7 @@ AI did not replace:
 
 The core system remains deterministic and explainable.
 
-## Day 2
+## Day 3-4
 ### 1. AI Usage 
 
 **Used for:**
@@ -156,7 +156,7 @@ The core system remains deterministic and explainable.
 
 
 
-## Day 3 
+## Day 5 
 
 ### 1. YouTube Niche Market Research
 
@@ -254,7 +254,7 @@ The core system remains deterministic and explainable.
 - Added 3-month buffer for "realistic expectations" vs "optimistic potential"
 
 
-## Day 4 
+## Day 6
 
 ### 1. NLP Approach Selection
 
@@ -326,6 +326,43 @@ The core system remains deterministic and explainable.
 **Boundary maintained:** AI informs design choices, never executes decisions.
 
 Parser is **peripheral layer** by design. Core engine untouched.
+
+
+## Day 7
+
+**Search Queries:**
+- "UX best practices for recommendation systems refinement questions"
+- "Progressive disclosure in decision tools UI"
+- "How to disable button until form fields filled JS"
+- "Explaining mismatches in recommendation UIs (e.g., Netflix-style 'why this?')"
+- "CSS for progress bars and card layouts in Flask templates"
+
+**References:**
+- Nielsen Norman Group (NNGroup): Articles on progressive disclosure and personalization in UIs.
+- Baymard Institute: Studies on form validation and disabled buttons to prevent errors.
+- Material Design guidelines: For card layouts, score bars, and radio buttons in refinement sections.
+- UX Matters: On explaining recommendations to build trust (e.g., "why not X?" notes).
+
+**Applied:**
+- Disabled analyze button until profession/goal selected (JS event listeners).
+- Refinement questions for mismatches (radio options for fast/balanced/passion).
+- Notes in UI for transparency (e.g., "This ranked high due to side-income potential, but doesn't match background").
+- Score bars (simple CSS) for visual feedback.
+
+**Rejected:**
+- Full multi-step wizard form (too complex for scope).
+- Reason: Keep initial input simple; refinement only when needed.
+
+**AI Usage:**
+- Used Grok to generate code snippets for JS validation and refinement logic.
+- Not used for core scoring — only UI generation.
+
+**Prompt example:**
+> "Give complete index.html code with disable state for button if options not selected, and refinement section after results."
+
+**Response applied:**
+- Integrated UI code with tweaks for Flask/Jinja compatibility.
+- Ensured no AI in decision logic; only for code structuring.
 
 
 

@@ -44,7 +44,12 @@
             font-weight: 600;
             margin-top: 12px;
         }
-        button:hover { background: #0055aa; }
+        button:hover:not(:disabled) { background: #0055aa; }
+        button:disabled { 
+            background: #ccc; 
+            cursor: not-allowed; 
+            opacity: 0.6;
+        }
         .trace { 
             background: #f0f8ff; 
             padding: 16px; 
@@ -114,6 +119,18 @@
             border-left: 4px solid #ffb300;
             font-size: 14px;
         }
+        .refine-section { 
+            margin-top: 24px; 
+            padding: 20px; 
+            background: #f0f4f8; 
+            border-radius: 10px; 
+            border: 1px solid #d1e0ff;
+        }
+        .refine-section label { 
+            display: block; 
+            margin: 12px 0; 
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
@@ -132,7 +149,7 @@
         <div class="form-group">
             <label>Profession / Background:</label>
             <select id="profession">
-                <option value="">Select or type...</option>
+                <option value="">Select...</option>
                 {% for prof in professions %}
                     <option value="{{ prof }}">{{ prof }}</option>
                 {% endfor %}
@@ -153,23 +170,24 @@
         <div class="form-group">
             <label>Main goal:</label>
             <select id="goal">
-                <option value="side_income" selected>Side income (want to earn money)</option>
+                <option value="">Select...</option>
+                <option value="side_income">Side income (want to earn money)</option>
                 <option value="long_term">Long-term career / main income</option>
                 <option value="passion">Passion project / fun</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Main topics / interests (optional, helps override):</label>
+            <label>Main topics / interests (optional, comma-separated):</label>
             <input type="text" id="priorities" placeholder="e.g., gaming, books, fitness, coding, ai">
         </div>
 
         <div class="form-group">
-            <label>Any constraints? (optional):</label>
+            <label>Any constraints? (optional, comma-separated):</label>
             <input type="text" id="constraints" placeholder="e.g., limited time, no budget for equipment">
         </div>
 
-        <button onclick="analyzeStructured()">Find My Best Niches</button>
+        <button id="analyzeBtn" onclick="analyzeStructured()" disabled>Find My Best Niches</button>
     </div>
 
     <!-- === Free-form Tab === -->
@@ -194,6 +212,7 @@
     <script>
         let lastParsed = null;
 
+        // Tab switching
         function showTab(tabId) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`.tab[onclick*="${tabId}"]`).classList.add('active');
@@ -202,10 +221,31 @@
             document.getElementById('freeform').classList.toggle('hidden', tabId !== 'freeform');
         }
 
+        // Enable/disable analyze button in guided mode
+        const professionSelect = document.getElementById('profession');
+        const goalSelect = document.getElementById('goal');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+
+        function checkInputs() {
+            const prof = professionSelect.value.trim();
+            const goal = goalSelect.value.trim();
+            analyzeBtn.disabled = !(prof && goal);
+        }
+
+        professionSelect.addEventListener('change', checkInputs);
+        goalSelect.addEventListener('change', checkInputs);
+        checkInputs();
+
+        // Structured analyze
         async function analyzeStructured() {
-            const profession = document.getElementById('profession').value || "general";
+            if (analyzeBtn.disabled) {
+                alert("Please select at least Profession and Goal.");
+                return;
+            }
+
+            const profession = professionSelect.value || "general";
             const hours = parseInt(document.getElementById('hours_per_week').value) || 10;
-            const goal = document.getElementById('goal').value;
+            const goal = goalSelect.value;
             const prioritiesStr = document.getElementById('priorities').value.trim();
             const constraintsStr = document.getElementById('constraints').value.trim();
 
@@ -220,6 +260,7 @@
             await doAnalyze({ structured });
         }
 
+        // Free-form parse
         async function analyzeFreeform() {
             const prompt = document.getElementById('prompt').value.trim();
             if (!prompt) return alert("Please write something about yourself");
@@ -258,6 +299,7 @@
             document.getElementById('verification').classList.add('hidden');
         }
 
+        // Main analyze function
         async function doAnalyze(payload) {
             document.getElementById('results').innerHTML = '<p>Loading recommendations...</p>';
 
@@ -302,7 +344,100 @@
                 `;
             });
 
+            // === REFINEMENT QUESTION SECTION ===
+            if (data.show_refinement) {
+                const predicted = data.refinement_context?.predicted || 'your interest';
+                const topNiche = data.refinement_context?.top_niche || 'another niche';
+
+                html += `
+                    <div class="refine-section">
+                        <h4>Refine the results?</h4>
+                        <p>${topNiche} ranked highest for quick side income, but your background is in ${predicted}. Which feels more right?</p>
+                        
+                        <label>
+                            <input type="radio" name="refine" value="fast" checked>
+                            Prioritize fastest side income (even if topic is different)
+                        </label>
+                        <label>
+                            <input type="radio" name="refine" value="balanced">
+                            Want balance — decent money + closer to my interests/skills
+                        </label>
+                        <label>
+                            <input type="radio" name="refine" value="passion">
+                            My main passion is ${predicted} — prioritize that even if money comes slower
+                        </label>
+                        
+                        <button onclick="refineRecommendations('${JSON.stringify(data.refinement_context?.original_parsed || {}).replace(/"/g, '&quot;')}')">Update Recommendations</button>
+                    </div>
+                `;
+            }
+
             document.getElementById('results').innerHTML = html;
+        }
+
+        // Real refinement call
+        async function refineRecommendations(originalParsedStr) {
+            const selected = document.querySelector('input[name="refine"]:checked');
+            if (!selected) {
+                alert("Please select an option");
+                return;
+            }
+            
+            const choice = selected.value;
+            
+            try {
+                const payload = {
+                    original_parsed: JSON.parse(originalParsedStr),
+                    choice: choice
+                };
+                
+                document.getElementById('results').innerHTML = '<p>Refining recommendations...</p>';
+                
+                const res = await fetch('/api/refine', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    document.getElementById('results').innerHTML = `<p style="color:red">Error: ${err.error || 'Unknown'}</p>`;
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                // Re-render refined results
+                let html = '<h3>Refined Top 3 Niches</h3>';
+                html += `<div class="confidence">Refined with choice: ${data.refined_choice} • Confidence: ${data.sensitivity?.level || 'N/A'}</div>`;
+                
+                data.recommendations.forEach((rec, idx) => {
+                    const rank = idx + 1;
+                    const badge = rec.domain_match ? '<span class="domain-badge">Profession Match</span>' : '';
+                    const scorePercent = Math.round(rec.score * 100);
+                    
+                    let noteHtml = '';
+                    if (rank === 1 && !rec.domain_match) {
+                        noteHtml = '<div class="note">Top pick based on your refinement choice.</div>';
+                    }
+                    
+                    html += `
+                        <div class="result rank-${rank}">
+                            <h4>#${rank} ${rec.name} ${badge}</h4>
+                            <p>Score: ${rec.score.toFixed(4)} | Risk: ${rec.risk_level}</p>
+                            <div class="score-bar"><div class="score-fill" style="width: ${scorePercent}%"></div></div>
+                            <p>${rec.explanation?.summary || 'No summary'}</p>
+                            ${noteHtml}
+                            ${rec.explanation?.recommendation ? `<p><strong>Recommendation:</strong> ${rec.explanation.recommendation}</p>` : ''}
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('results').innerHTML = html;
+                
+            } catch (err) {
+                document.getElementById('results').innerHTML = `<p style="color:red">Refinement failed: ${err.message}</p>`;
+            }
         }
     </script>
 </body>
