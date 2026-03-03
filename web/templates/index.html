@@ -1,74 +1,308 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NicheNavigator - YouTube Niche Advisor</title>
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .prompt-box { width: 100%; height: 100px; margin: 10px 0; padding: 10px; }
-        button { padding: 10px 20px; background: #0066cc; color: white; border: none; cursor: pointer; }
-        .result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-        .rank-1 { background: #e8f5e9; border-color: #4caf50; }
-        .rank-2 { background: #e3f2fd; border-color: #2196f3; }
-        .rank-3 { background: #fff3e0; border-color: #ff9800; }
-        .parsed { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 3px; }
-        .loading { color: #666; font-style: italic; }
-        .error { color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 3px; }
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            line-height: 1.6; 
+            color: #333; 
+            background: #f9f9f9;
+        }
+        h1 { color: #0066cc; margin-bottom: 8px; }
+        .section { 
+            margin: 24px 0; 
+            padding: 24px; 
+            border: 1px solid #ddd; 
+            border-radius: 12px; 
+            background: white; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .form-group { margin: 20px 0; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; }
+        input, select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            box-sizing: border-box;
+        }
+        button { 
+            padding: 14px 28px; 
+            background: #0066cc; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        button:hover { background: #0055aa; }
+        .trace { 
+            background: #f0f8ff; 
+            padding: 16px; 
+            margin: 12px 0; 
+            border-radius: 8px; 
+            font-family: monospace; 
+            font-size: 14px; 
+            border-left: 4px solid #0066cc;
+        }
+        .result { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border-radius: 10px; 
+            border-left: 5px solid;
+        }
+        .rank-1 { background: #e8f5e9; border-left-color: #4caf50; }
+        .rank-2 { background: #e3f2fd; border-left-color: #2196f3; }
+        .rank-3 { background: #fff3e0; border-left-color: #ff9800; }
+        .verification { 
+            background: #fff8e1; 
+            border: 2px solid #ffc107; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 10px;
+        }
+        .hidden { display: none; }
+        .tabs { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 24px; 
+            border-bottom: 2px solid #eee;
+        }
+        .tab { 
+            padding: 12px 24px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            color: #555;
+        }
+        .tab.active { 
+            border-bottom: 3px solid #0066cc; 
+            color: #0066cc;
+        }
+        .domain-badge { 
+            background: #4caf50; 
+            color: white; 
+            padding: 4px 10px; 
+            border-radius: 16px; 
+            font-size: 13px; 
+            margin-left: 10px;
+        }
+        .score-bar { 
+            background: #eee; 
+            height: 10px; 
+            border-radius: 5px; 
+            margin: 8px 0; 
+            overflow: hidden;
+        }
+        .score-fill { 
+            height: 100%; 
+            background: linear-gradient(to right, #4caf50, #81c784); 
+        }
+        .note { 
+            background: #fffde7; 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin: 16px 0; 
+            border-left: 4px solid #ffb300;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <h1>🎯 NicheNavigator</h1>
-    <p>Describe your situation and goals. We'll recommend the best YouTube niche.</p>
-    
-    <textarea id="prompt" class="prompt-box" placeholder="Example: I'm good at coding but have limited time. I want side income and don't care about competition."></textarea>
-    <br>
-    <button onclick="analyze()">Analyze</button>
-    
-    <div id="results"></div>
+    <p>Find the best YouTube niche based on your background, time, and goals.</p>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('structured')">Guided Input</div>
+        <div class="tab" onclick="showTab('freeform')">Free-form Prompt</div>
+    </div>
+
+    <!-- === Guided / Structured Tab === -->
+    <div id="structured" class="section">
+        <h3>Tell us about yourself</h3>
+
+        <div class="form-group">
+            <label>Profession / Background:</label>
+            <select id="profession">
+                <option value="">Select or type...</option>
+                {% for prof in professions %}
+                    <option value="{{ prof }}">{{ prof }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Hours per week you can dedicate:</label>
+            <select id="hours_per_week">
+                <option value="2">Very limited (~2 h)</option>
+                <option value="5">Limited (~5 h)</option>
+                <option value="10" selected>Part-time (~10 h)</option>
+                <option value="20">Serious side project (~20 h)</option>
+                <option value="40">Full-time commitment</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Main goal:</label>
+            <select id="goal">
+                <option value="side_income" selected>Side income (want to earn money)</option>
+                <option value="long_term">Long-term career / main income</option>
+                <option value="passion">Passion project / fun</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Main topics / interests (optional, helps override):</label>
+            <input type="text" id="priorities" placeholder="e.g., gaming, books, fitness, coding, ai">
+        </div>
+
+        <div class="form-group">
+            <label>Any constraints? (optional):</label>
+            <input type="text" id="constraints" placeholder="e.g., limited time, no budget for equipment">
+        </div>
+
+        <button onclick="analyzeStructured()">Find My Best Niches</button>
+    </div>
+
+    <!-- === Free-form Tab === -->
+    <div id="freeform" class="section hidden">
+        <h3>Describe your situation in your own words</h3>
+        <textarea id="prompt" rows="5" placeholder="Example: I'm a gamer with only 5-10 hours per week, want side income but really passionate about gaming content..."></textarea>
+        <button onclick="analyzeFreeform()">Analyze</button>
+
+        <div id="parsedDisplay" class="trace hidden"></div>
+
+        <div id="verification" class="verification hidden">
+            <h4>We understood:</h4>
+            <div id="parsedSummary"></div>
+            <button onclick="confirmAnalyze()">Looks good → Show Recommendations</button>
+            <button onclick="editInput()">Edit / Try again</button>
+        </div>
+    </div>
+
+    <!-- Results area -->
+    <div id="results" class="section"></div>
 
     <script>
-        async function analyze() {
-            const prompt = document.getElementById('prompt').value;
-            const resultsDiv = document.getElementById('results');
+        let lastParsed = null;
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick*="${tabId}"]`).classList.add('active');
             
-            resultsDiv.innerHTML = '<p class="loading">Analyzing...</p>';
-            
-            try {
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({prompt: prompt})
-                });
-                
-                const data = await response.json();
-                
-                if (!data.success) {
-                    resultsDiv.innerHTML = `<p class="error">Error: ${data.error}</p>`;
-                    return;
-                }
-                
-                let html = `<div class="parsed"><strong>Understood:</strong> ${data.parsed.parsed_intent}</div>`;
-                html += `<h3>Top Recommendations</h3>`;
-                
-                data.recommendations.forEach(rec => {
-                    html += `
-                        <div class="result rank-${rec.rank}">
-                            <h4>#${rec.rank} ${rec.name}</h4>
-                            <p>Score: ${rec.score} | Risk: ${rec.risk_level}</p>
-                            <p>${rec.explanation.summary}</p>
-                            ${rec.explanation.comparisons.length ? `
-                                <p><strong>Advantages:</strong> ${rec.explanation.comparisons.filter(c => c.advantage).map(c => c.message).join('; ')}</p>
-                            ` : ''}
-                        </div>
-                    `;
-                });
-                
-                html += `<p><small>Confidence: ${data.sensitivity.confidence.level}</small></p>`;
-                
-                resultsDiv.innerHTML = html;
-                
-            } catch (err) {
-                resultsDiv.innerHTML = `<p class="error">Failed to analyze</p>`;
+            document.getElementById('structured').classList.toggle('hidden', tabId !== 'structured');
+            document.getElementById('freeform').classList.toggle('hidden', tabId !== 'freeform');
+        }
+
+        async function analyzeStructured() {
+            const profession = document.getElementById('profession').value || "general";
+            const hours = parseInt(document.getElementById('hours_per_week').value) || 10;
+            const goal = document.getElementById('goal').value;
+            const prioritiesStr = document.getElementById('priorities').value.trim();
+            const constraintsStr = document.getElementById('constraints').value.trim();
+
+            const structured = {
+                profession,
+                hours_per_week: hours,
+                goal,
+                priorities: prioritiesStr ? prioritiesStr.split(',').map(p => p.trim()) : [],
+                constraints: constraintsStr ? constraintsStr.split(',').map(c => c.trim()) : []
+            };
+
+            await doAnalyze({ structured });
+        }
+
+        async function analyzeFreeform() {
+            const prompt = document.getElementById('prompt').value.trim();
+            if (!prompt) return alert("Please write something about yourself");
+
+            const res = await fetch('/api/parse', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ prompt })
+            });
+
+            if (!res.ok) {
+                alert("Parsing failed");
+                return;
             }
+
+            const data = await res.json();
+            lastParsed = data.parsed;
+
+            let summary = '<strong>Detected:</strong><br>';
+            summary += `Profession: ${data.parsed.extracted?.profession || 'Not detected'}<br>`;
+            summary += `Hours/week: ${data.parsed.extracted?.hours || '10'}<br>`;
+            summary += `Goal: ${data.parsed.goal || 'Not detected'}<br>`;
+            summary += `Domain: ${data.parsed.domain || 'general'}<br>`;
+            summary += `Predicted niche: <strong>${data.parsed.predicted_niche || 'General'}</strong><br>`;
+            if (data.parsed.override_reason) {
+                summary += `<br><strong>Interest override:</strong> ${data.parsed.override_reason}`;
+            }
+
+            document.getElementById('parsedSummary').innerHTML = summary;
+            document.getElementById('parsedDisplay').classList.remove('hidden');
+            document.getElementById('verification').classList.remove('hidden');
+        }
+
+        async function confirmAnalyze() {
+            await doAnalyze({ structured: lastParsed.extracted });
+            document.getElementById('verification').classList.add('hidden');
+        }
+
+        async function doAnalyze(payload) {
+            document.getElementById('results').innerHTML = '<p>Loading recommendations...</p>';
+
+            const res = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                document.getElementById('results').innerHTML = `<p style="color:red">Error: ${err.error || 'Unknown error'}</p>`;
+                return;
+            }
+
+            const data = await res.json();
+
+            let html = '<h3>Top 3 Recommended Niches</h3>';
+            html += `<div class="confidence">Confidence: ${data.sensitivity?.level || 'N/A'} • Based on: ${data.input_parsed?.domain || 'general'} background</div>`;
+
+            data.recommendations.slice(0, 3).forEach((rec, idx) => {
+                const rank = idx + 1;
+                const badge = rec.domain_match ? '<span class="domain-badge">Profession Match</span>' : '';
+                const scorePercent = Math.round(rec.score * 100);
+
+                let noteHtml = '';
+                if (rank === 1 && !rec.domain_match) {
+                    noteHtml = '<div class="note">This niche ranked #1 based on pure side-income potential (high earnings + growth + low startup cost), even if it doesn\'t match your background.</div>';
+                } else if (rec.name.includes("Gaming") && rank > 1) {
+                    noteHtml = '<div class="note">Gaming ranks lower here due to high competition and setup costs. It usually performs much better for passion/fun goals.</div>';
+                }
+
+                html += `
+                    <div class="result rank-${rank}">
+                        <h4>#${rank} ${rec.name} ${badge}</h4>
+                        <p>Score: ${rec.score.toFixed(4)} | Risk: ${rec.risk_level}</p>
+                        <div class="score-bar"><div class="score-fill" style="width: ${scorePercent}%"></div></div>
+                        <p>${rec.explanation?.summary || 'No summary available'}</p>
+                        ${noteHtml}
+                        ${rec.explanation?.recommendation ? `<p><strong>Recommendation:</strong> ${rec.explanation.recommendation}</p>` : ''}
+                    </div>
+                `;
+            });
+
+            document.getElementById('results').innerHTML = html;
         }
     </script>
 </body>

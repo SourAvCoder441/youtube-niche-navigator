@@ -25,9 +25,9 @@ NICHES = {
         "attributes": {
             "skill": 8,
             "time": 6,
-            "monetization": 9,
+            "monetization": 8,  # Lowered from 9
             "competition": 6,
-            "growth": 9,
+            "growth": 8,  # Lowered from 9
             "investment": 4
         },
         "metadata": {
@@ -44,7 +44,7 @@ NICHES = {
             "time": 5,
             "monetization": 6,
             "competition": 9,
-            "growth": 6,
+            "growth": 7,  # Increased from 6 for balance
             "investment": 8
         },
         "metadata": {
@@ -94,8 +94,8 @@ NICHES = {
             "skill": 6,
             "time": 7,
             "monetization": 7,
-            "competition": 8,
-            "growth": 6,
+            "competition": 7,  # Lowered from 8 for balance
+            "growth": 7,  # Increased from 6
             "investment": 4
         },
         "metadata": {
@@ -163,7 +163,7 @@ NICHES = {
             "time": 8,
             "monetization": 6,
             "competition": 5,
-            "growth": 6,
+            "growth": 7,  # Increased from 6 for balance
             "investment": 5
         },
         "metadata": {
