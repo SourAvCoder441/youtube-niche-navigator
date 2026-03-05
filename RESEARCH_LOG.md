@@ -364,6 +364,37 @@ Parser is **peripheral layer** by design. Core engine untouched.
 - Integrated UI code with tweaks for Flask/Jinja compatibility.
 - Ensured no AI in decision logic; only for code structuring.
 
+## Day 8 – UI Best Practices, Refinement Patterns, and Decision Companion Research (March 05, 2026)
 
+**Search Queries:**
+- "UX patterns for recommendation refinement questions"
+- "Progressive disclosure in decision support tools"
+- "How to disable form submit button until required fields filled JavaScript"
+- "Explaining recommendation mismatches in UI (Netflix, Spotify examples)"
+- "Multi-criteria decision making UI examples with user-defined options"
+
+**References:**
+- Nielsen Norman Group (NN/g): "Progressive Disclosure" – show refinement only when mismatch detected
+- Baymard Institute: Form validation – disable submit until required fields (profession + goal) filled
+- Material Design / Carbon Design: Card layouts, radio groups, progress bars for scoring
+- UX Collective / Smashing Magazine: "Why this recommendation?" notes to build trust
+
+**Applied:**
+- Disabled analyze button until profession + goal selected (JS change event listeners)
+- Refinement radio buttons (fast/balanced/passion) + re-scoring endpoint
+- Score progress bars + color-coded notes for transparency
+- Stronger interest override in parser (force niche + big weight shifts)
+
+**AI Usage:**
+- Used Grok to generate/refine JS for button disable + refinement UI block
+- Not used for core scoring logic, weight adjustments, or niche attributes
+
+**Prompt examples:**
+- "Complete index.html with button disabled until profession and goal selected + refinement section after results"
+- "How to make interests field override predicted niche and apply strong skill/time boosts in Python parser"
+
+**Reflection:**
+- Shifted from "recommend top 3" to "evaluate user niches" mindset
+- UI now feels more like a companion (asks user to clarify intent when mismatch occurs)
 
 
