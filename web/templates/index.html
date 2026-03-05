@@ -3,442 +3,621 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NicheNavigator - YouTube Niche Advisor</title>
+    <title>NicheNavigator - Deterministic YouTube Decision Companion</title>
     <style>
-        body { 
-            font-family: system-ui, -apple-system, sans-serif; 
-            max-width: 900px; 
-            margin: 0 auto; 
-            padding: 20px; 
-            line-height: 1.6; 
-            color: #333; 
-            background: #f9f9f9;
+        :root {
+            --bg-1: #f2efe8;
+            --bg-2: #d6e2dc;
+            --ink: #1e1b18;
+            --muted: #5f5a54;
+            --panel: #fffdf9;
+            --accent: #1f6f5f;
+            --accent-2: #b25f2e;
+            --ok: #2e7d32;
+            --warn: #c57b00;
+            --bad: #b3261e;
+            --line: #d7d0c6;
         }
-        h1 { color: #0066cc; margin-bottom: 8px; }
-        .section { 
-            margin: 24px 0; 
-            padding: 24px; 
-            border: 1px solid #ddd; 
-            border-radius: 12px; 
-            background: white; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                radial-gradient(circle at 20% 10%, rgba(31, 111, 95, 0.16), transparent 35%),
+                radial-gradient(circle at 80% 20%, rgba(178, 95, 46, 0.15), transparent 33%),
+                linear-gradient(145deg, var(--bg-1), var(--bg-2));
+            min-height: 100vh;
+            padding: 20px;
         }
-        .form-group { margin: 20px 0; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; }
-        input, select, textarea { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
-            font-size: 16px; 
-            box-sizing: border-box;
+
+        .container {
+            max-width: 1150px;
+            margin: 0 auto;
         }
-        button { 
-            padding: 14px 28px; 
-            background: #0066cc; 
-            color: white; 
-            border: none; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-size: 16px; 
+
+        .hero {
+            background: linear-gradient(135deg, #1c5c50, #234c7a);
+            color: #fff;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 12px 28px rgba(20, 34, 31, 0.25);
+        }
+
+        .hero h1 { margin: 0 0 8px 0; font-size: 2rem; }
+        .hero p { margin: 0; color: #e7ecea; }
+
+        .badge {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            font-size: 0.82rem;
+            letter-spacing: 0.02em;
+        }
+
+        .panel {
+            margin-top: 18px;
+            background: var(--panel);
+            border: 1px solid rgba(43, 37, 31, 0.12);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(40, 32, 25, 0.08);
+        }
+
+        .step { display: none; }
+        .step.active { display: block; }
+        .hidden { display: none !important; }
+
+        .step-title {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.28rem;
+            color: #2a241f;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field label {
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.96rem;
+            background: #fff;
+            color: var(--ink);
+        }
+
+        textarea { min-height: 118px; resize: vertical; }
+
+        .weight-grid {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .weight-item {
+            border: 1px solid var(--line);
+            background: #fffefb;
+            border-radius: 10px;
+            padding: 8px;
+        }
+
+        .weight-item small {
+            display: block;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .controls {
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            cursor: pointer;
             font-weight: 600;
+            transition: transform 0.12s ease, opacity 0.15s ease;
+        }
+
+        .btn:hover { transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-secondary { background: #ebe4d9; color: #2f2a25; }
+        .btn-danger { background: var(--accent-2); color: #fff; }
+
+        .help {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .error {
+            margin-top: 12px;
+            border-left: 4px solid var(--bad);
+            background: #fdecea;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #6f221e;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
             margin-top: 12px;
         }
-        button:hover:not(:disabled) { background: #0055aa; }
-        button:disabled { 
-            background: #ccc; 
-            cursor: not-allowed; 
-            opacity: 0.6;
+
+        .summary-card {
+            border: 1px solid var(--line);
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px;
         }
-        .trace { 
-            background: #f0f8ff; 
-            padding: 16px; 
-            margin: 12px 0; 
-            border-radius: 8px; 
-            font-family: monospace; 
-            font-size: 14px; 
-            border-left: 4px solid #0066cc;
+
+        .summary-card h4 {
+            margin: 0 0 6px 0;
+            color: #3b342d;
+            font-size: 0.92rem;
         }
-        .result { 
-            margin: 20px 0; 
-            padding: 20px; 
-            border-radius: 10px; 
-            border-left: 5px solid;
+
+        .summary-card strong { font-size: 1.12rem; }
+
+        .recommendations {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
         }
-        .rank-1 { background: #e8f5e9; border-left-color: #4caf50; }
-        .rank-2 { background: #e3f2fd; border-left-color: #2196f3; }
-        .rank-3 { background: #fff3e0; border-left-color: #ff9800; }
-        .verification { 
-            background: #fff8e1; 
-            border: 2px solid #ffc107; 
-            padding: 20px; 
-            margin: 20px 0; 
-            border-radius: 10px;
+
+        .rec-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-left: 6px solid #c4b8a6;
+            border-radius: 12px;
+            padding: 14px;
         }
-        .hidden { display: none; }
-        .tabs { 
-            display: flex; 
-            gap: 12px; 
-            margin-bottom: 24px; 
-            border-bottom: 2px solid #eee;
+
+        .rec-card.rank-1 { border-left-color: var(--ok); }
+        .rec-card.rank-2 { border-left-color: #1b7bbf; }
+        .rec-card.rank-3 { border-left-color: var(--warn); }
+
+        .rec-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
-        .tab { 
-            padding: 12px 24px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            color: #555;
+
+        .pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
         }
-        .tab.active { 
-            border-bottom: 3px solid #0066cc; 
-            color: #0066cc;
+
+        .pill.low { background: #e8f5e9; color: #1b5e20; }
+        .pill.moderate { background: #fff8e1; color: #8a5c00; }
+        .pill.high { background: #fdecea; color: #7f211b; }
+
+        .section-title {
+            margin: 10px 0 6px 0;
+            font-size: 0.88rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
         }
-        .domain-badge { 
-            background: #4caf50; 
-            color: white; 
-            padding: 4px 10px; 
-            border-radius: 16px; 
-            font-size: 13px; 
-            margin-left: 10px;
-        }
-        .score-bar { 
-            background: #eee; 
-            height: 10px; 
-            border-radius: 5px; 
-            margin: 8px 0; 
+
+        .bar {
+            height: 8px;
+            border-radius: 999px;
+            background: #ece6dc;
             overflow: hidden;
+            margin-top: 5px;
         }
-        .score-fill { 
-            height: 100%; 
-            background: linear-gradient(to right, #4caf50, #81c784); 
+
+        .bar > span {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, #1f6f5f, #2f8e79);
         }
-        .note { 
-            background: #fffde7; 
-            padding: 12px; 
-            border-radius: 8px; 
-            margin: 16px 0; 
-            border-left: 4px solid #ffb300;
-            font-size: 14px;
+
+        ul { margin: 6px 0 8px 18px; padding: 0; }
+        li { margin-bottom: 5px; }
+
+        .footer-note {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: var(--muted);
         }
-        .refine-section { 
-            margin-top: 24px; 
-            padding: 20px; 
-            background: #f0f4f8; 
-            border-radius: 10px; 
-            border: 1px solid #d1e0ff;
+
+        @media (max-width: 860px) {
+            .grid { grid-template-columns: 1fr; }
+            .weight-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .summary-grid { grid-template-columns: 1fr; }
         }
-        .refine-section label { 
-            display: block; 
-            margin: 12px 0; 
-            font-weight: normal;
+
+        @media (max-width: 560px) {
+            body { padding: 12px; }
+            .panel { padding: 14px; }
+            .weight-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 1.6rem; }
         }
     </style>
 </head>
 <body>
-    <h1>🎯 NicheNavigator</h1>
-    <p>Find the best YouTube niche based on your background, time, and goals.</p>
+    <div class="container">
+        <section class="hero">
+            <h1>NicheNavigator</h1>
+            <p>Deterministic YouTube niche decision companion with transparent scoring and trade-offs.</p>
+            <span class="badge">No black-box AI in ranking logic</span>
+        </section>
 
-    <div class="tabs">
-        <div class="tab active" onclick="showTab('structured')">Guided Input</div>
-        <div class="tab" onclick="showTab('freeform')">Free-form Prompt</div>
+        <section id="step1" class="panel step active">
+            <h2 class="step-title">Step 1: Profile and Goal</h2>
+            <div class="grid">
+                <div class="field">
+                    <label for="profession">Profession / background</label>
+                    <select id="profession">
+                        <option value="">Select one</option>
+                        {% for prof in professions %}
+                            <option value="{{ prof }}">{{ prof }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="hours_per_week">Hours available per week</label>
+                    <select id="hours_per_week">
+                        <option value="2">Very limited (~2h)</option>
+                        <option value="5">Limited (~5h)</option>
+                        <option value="10" selected>Part-time (~10h)</option>
+                        <option value="20">Strong commitment (~20h)</option>
+                        <option value="40">Full-time (~40h)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="goal">Primary goal</label>
+                    <select id="goal">
+                        <option value="">Select one</option>
+                        <option value="side_income">Side income</option>
+                        <option value="long_term">Long-term creator career</option>
+                        <option value="passion">Passion / enjoyment</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="priorities">Priorities (comma separated)</label>
+                    <input id="priorities" type="text" placeholder="growth, low competition, skill fit">
+                </div>
+                <div class="field">
+                    <label for="constraints">Constraints (comma separated)</label>
+                    <input id="constraints" type="text" placeholder="limited time, low budget">
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn btn-primary" id="step1Next" onclick="goToStep(2)" disabled>Next: Options</button>
+            </div>
+            <div class="help">Profession and goal are required.</div>
+        </section>
+
+        <section id="step2" class="panel step">
+            <h2 class="step-title">Step 2: Options and Weights</h2>
+            <div class="grid">
+                <div class="field">
+                    <label for="niches">Your niche options (1-12, one per line)</label>
+                    <textarea id="niches" placeholder="Gaming Shorts&#10;AI Tool Reviews&#10;Python Tutorials"></textarea>
+                </div>
+                <div class="field">
+                    <label for="csvFile">Or upload CSV</label>
+                    <input type="file" id="csvFile" accept=".csv">
+                    <div class="help">CSV columns: niche_name,skill,time,monetization,competition,growth,investment</div>
+                    <button type="button" class="btn btn-secondary" onclick="loadSampleNiches()">Load sample options</button>
+                </div>
+            </div>
+
+            <h3 class="section-title">Advanced: Custom Criteria Weights (1-10)</h3>
+            <div class="weight-grid">
+                <div class="weight-item"><label>Skill <input id="w_skill" type="number" min="1" max="10" value="5"></label><small>Higher means stronger skill fit preference.</small></div>
+                <div class="weight-item"><label>Time <input id="w_time" type="number" min="1" max="10" value="5"></label><small>Higher favors time-efficient niches.</small></div>
+                <div class="weight-item"><label>Monetization <input id="w_monetization" type="number" min="1" max="10" value="5"></label><small>Higher favors revenue potential.</small></div>
+                <div class="weight-item"><label>Competition <input id="w_competition" type="number" min="1" max="10" value="5"></label><small>Higher penalizes crowded niches.</small></div>
+                <div class="weight-item"><label>Growth <input id="w_growth" type="number" min="1" max="10" value="5"></label><small>Higher favors audience growth potential.</small></div>
+                <div class="weight-item"><label>Investment <input id="w_investment" type="number" min="1" max="10" value="5"></label><small>Higher favors lower startup cost.</small></div>
+            </div>
+
+            <div id="errorBox" class="error hidden"></div>
+
+            <div class="controls">
+                <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
+                <button class="btn btn-primary" onclick="evaluateNiches()" id="evaluateBtn">Evaluate Niches</button>
+            </div>
+        </section>
+
+        <section id="step3" class="panel step">
+            <h2 class="step-title">Step 3: Deterministic Recommendation</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h4>Top Recommendation</h4>
+                    <strong id="topPick">-</strong>
+                </div>
+                <div class="summary-card">
+                    <h4>Confidence</h4>
+                    <strong id="confidenceLevel">-</strong>
+                    <div id="confidenceDesc" class="help"></div>
+                </div>
+                <div class="summary-card">
+                    <h4>Counterfactual</h4>
+                    <div id="counterfactualText" class="help">-</div>
+                </div>
+            </div>
+
+            <div id="decisionMemo" class="panel" style="padding: 12px; margin-top: 12px;"></div>
+            <div id="recommendations" class="recommendations"></div>
+
+            <div class="controls">
+                <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+                <button class="btn btn-danger" onclick="resetAll()">Reset</button>
+            </div>
+            <div class="footer-note">Ranking is deterministic and score-traceable. Change inputs to test different outcomes.</div>
+        </section>
     </div>
-
-    <!-- === Guided / Structured Tab === -->
-    <div id="structured" class="section">
-        <h3>Tell us about yourself</h3>
-
-        <div class="form-group">
-            <label>Profession / Background:</label>
-            <select id="profession">
-                <option value="">Select...</option>
-                {% for prof in professions %}
-                    <option value="{{ prof }}">{{ prof }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Hours per week you can dedicate:</label>
-            <select id="hours_per_week">
-                <option value="2">Very limited (~2 h)</option>
-                <option value="5">Limited (~5 h)</option>
-                <option value="10" selected>Part-time (~10 h)</option>
-                <option value="20">Serious side project (~20 h)</option>
-                <option value="40">Full-time commitment</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Main goal:</label>
-            <select id="goal">
-                <option value="">Select...</option>
-                <option value="side_income">Side income (want to earn money)</option>
-                <option value="long_term">Long-term career / main income</option>
-                <option value="passion">Passion project / fun</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Main topics / interests (optional, comma-separated):</label>
-            <input type="text" id="priorities" placeholder="e.g., gaming, books, fitness, coding, ai">
-        </div>
-
-        <div class="form-group">
-            <label>Any constraints? (optional, comma-separated):</label>
-            <input type="text" id="constraints" placeholder="e.g., limited time, no budget for equipment">
-        </div>
-
-        <button id="analyzeBtn" onclick="analyzeStructured()" disabled>Find My Best Niches</button>
-    </div>
-
-    <!-- === Free-form Tab === -->
-    <div id="freeform" class="section hidden">
-        <h3>Describe your situation in your own words</h3>
-        <textarea id="prompt" rows="5" placeholder="Example: I'm a gamer with only 5-10 hours per week, want side income but really passionate about gaming content..."></textarea>
-        <button onclick="analyzeFreeform()">Analyze</button>
-
-        <div id="parsedDisplay" class="trace hidden"></div>
-
-        <div id="verification" class="verification hidden">
-            <h4>We understood:</h4>
-            <div id="parsedSummary"></div>
-            <button onclick="confirmAnalyze()">Looks good → Show Recommendations</button>
-            <button onclick="editInput()">Edit / Try again</button>
-        </div>
-    </div>
-
-    <!-- Results area -->
-    <div id="results" class="section"></div>
 
     <script>
-        let lastParsed = null;
+        const criteriaKeys = ["skill", "time", "monetization", "competition", "growth", "investment"];
 
-        // Tab switching
-        function showTab(tabId) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.tab[onclick*="${tabId}"]`).classList.add('active');
-            
-            document.getElementById('structured').classList.toggle('hidden', tabId !== 'structured');
-            document.getElementById('freeform').classList.toggle('hidden', tabId !== 'freeform');
+        function goToStep(step) {
+            document.querySelectorAll(".step").forEach((panel) => panel.classList.remove("active"));
+            document.getElementById(`step${step}`).classList.add("active");
         }
 
-        // Enable/disable analyze button in guided mode
-        const professionSelect = document.getElementById('profession');
-        const goalSelect = document.getElementById('goal');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-
-        function checkInputs() {
-            const prof = professionSelect.value.trim();
-            const goal = goalSelect.value.trim();
-            analyzeBtn.disabled = !(prof && goal);
+        function validateStep1() {
+            const profession = document.getElementById("profession").value.trim();
+            const goal = document.getElementById("goal").value.trim();
+            document.getElementById("step1Next").disabled = !(profession && goal);
         }
 
-        professionSelect.addEventListener('change', checkInputs);
-        goalSelect.addEventListener('change', checkInputs);
-        checkInputs();
+        function showError(message) {
+            const box = document.getElementById("errorBox");
+            box.textContent = message;
+            box.classList.remove("hidden");
+        }
 
-        // Structured analyze
-        async function analyzeStructured() {
-            if (analyzeBtn.disabled) {
-                alert("Please select at least Profession and Goal.");
-                return;
+        function clearError() {
+            const box = document.getElementById("errorBox");
+            box.textContent = "";
+            box.classList.add("hidden");
+        }
+
+        function readCSV(text) {
+            const lines = text.split(/\r?\n/).filter(Boolean);
+            if (lines.length < 2) return [];
+
+            const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+            const rows = [];
+            for (let i = 1; i < lines.length; i += 1) {
+                const values = lines[i].split(",").map((v) => v.trim());
+                if (!values[0]) continue;
+                const obj = {};
+                headers.forEach((h, idx) => {
+                    obj[h] = values[idx] || "";
+                });
+                rows.push(obj);
             }
+            return rows;
+        }
 
-            const profession = professionSelect.value || "general";
-            const hours = parseInt(document.getElementById('hours_per_week').value) || 10;
-            const goal = goalSelect.value;
-            const prioritiesStr = document.getElementById('priorities').value.trim();
-            const constraintsStr = document.getElementById('constraints').value.trim();
+        function parseNumberOrNull(raw) {
+            if (raw === undefined || raw === null || raw === "") return null;
+            const num = Number(raw);
+            return Number.isFinite(num) ? num : null;
+        }
 
-            const structured = {
-                profession,
-                hours_per_week: hours,
-                goal,
-                priorities: prioritiesStr ? prioritiesStr.split(',').map(p => p.trim()) : [],
-                constraints: constraintsStr ? constraintsStr.split(',').map(c => c.trim()) : []
+        function parseNichesFromText() {
+            return document.getElementById("niches").value
+                .split(/\r?\n/)
+                .map((line) => line.trim())
+                .filter(Boolean)
+                .map((name) => ({ name, attributes: null }));
+        }
+
+        async function parseNichesFromCSV() {
+            const file = document.getElementById("csvFile").files[0];
+            if (!file) return [];
+            const text = await file.text();
+            const rows = readCSV(text);
+
+            return rows.map((row) => ({
+                name: row.niche_name || row.name || "",
+                attributes: {
+                    skill: parseNumberOrNull(row.skill),
+                    time: parseNumberOrNull(row.time),
+                    monetization: parseNumberOrNull(row.monetization),
+                    competition: parseNumberOrNull(row.competition),
+                    growth: parseNumberOrNull(row.growth),
+                    investment: parseNumberOrNull(row.investment),
+                },
+            }));
+        }
+
+        function getCustomWeights() {
+            const weights = {};
+            for (const key of criteriaKeys) {
+                const id = `w_${key}`;
+                const value = Number(document.getElementById(id).value);
+                if (!Number.isFinite(value) || value < 1 || value > 10) {
+                    throw new Error(`Weight '${key}' must be between 1 and 10.`);
+                }
+                weights[key] = value;
+            }
+            return weights;
+        }
+
+        function getProfilePayload() {
+            return {
+                profession: document.getElementById("profession").value,
+                hours_per_week: document.getElementById("hours_per_week").value,
+                goal: document.getElementById("goal").value || null,
+                priorities: document.getElementById("priorities").value
+                    .split(",")
+                    .map((x) => x.trim())
+                    .filter(Boolean),
+                constraints: document.getElementById("constraints").value
+                    .split(",")
+                    .map((x) => x.trim())
+                    .filter(Boolean),
+                custom_weights: getCustomWeights(),
             };
-
-            await doAnalyze({ structured });
         }
 
-        // Free-form parse
-        async function analyzeFreeform() {
-            const prompt = document.getElementById('prompt').value.trim();
-            if (!prompt) return alert("Please write something about yourself");
-
-            const res = await fetch('/api/parse', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ prompt })
-            });
-
-            if (!res.ok) {
-                alert("Parsing failed");
-                return;
-            }
-
-            const data = await res.json();
-            lastParsed = data.parsed;
-
-            let summary = '<strong>Detected:</strong><br>';
-            summary += `Profession: ${data.parsed.extracted?.profession || 'Not detected'}<br>`;
-            summary += `Hours/week: ${data.parsed.extracted?.hours || '10'}<br>`;
-            summary += `Goal: ${data.parsed.goal || 'Not detected'}<br>`;
-            summary += `Domain: ${data.parsed.domain || 'general'}<br>`;
-            summary += `Predicted niche: <strong>${data.parsed.predicted_niche || 'General'}</strong><br>`;
-            if (data.parsed.override_reason) {
-                summary += `<br><strong>Interest override:</strong> ${data.parsed.override_reason}`;
-            }
-
-            document.getElementById('parsedSummary').innerHTML = summary;
-            document.getElementById('parsedDisplay').classList.remove('hidden');
-            document.getElementById('verification').classList.remove('hidden');
+        function riskClass(level) {
+            if (!level) return "";
+            return level.toLowerCase();
         }
 
-        async function confirmAnalyze() {
-            await doAnalyze({ structured: lastParsed.extracted });
-            document.getElementById('verification').classList.add('hidden');
-        }
-
-        // Main analyze function
-        async function doAnalyze(payload) {
-            document.getElementById('results').innerHTML = '<p>Loading recommendations...</p>';
-
-            const res = await fetch('/api/analyze', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-
-            if (!res.ok) {
-                const err = await res.json();
-                document.getElementById('results').innerHTML = `<p style="color:red">Error: ${err.error || 'Unknown error'}</p>`;
-                return;
-            }
-
-            const data = await res.json();
-
-            let html = '<h3>Top 3 Recommended Niches</h3>';
-            html += `<div class="confidence">Confidence: ${data.sensitivity?.level || 'N/A'} • Based on: ${data.input_parsed?.domain || 'general'} background</div>`;
-
-            data.recommendations.slice(0, 3).forEach((rec, idx) => {
-                const rank = idx + 1;
-                const badge = rec.domain_match ? '<span class="domain-badge">Profession Match</span>' : '';
-                const scorePercent = Math.round(rec.score * 100);
-
-                let noteHtml = '';
-                if (rank === 1 && !rec.domain_match) {
-                    noteHtml = '<div class="note">This niche ranked #1 based on pure side-income potential (high earnings + growth + low startup cost), even if it doesn\'t match your background.</div>';
-                } else if (rec.name.includes("Gaming") && rank > 1) {
-                    noteHtml = '<div class="note">Gaming ranks lower here due to high competition and setup costs. It usually performs much better for passion/fun goals.</div>';
-                }
-
-                html += `
-                    <div class="result rank-${rank}">
-                        <h4>#${rank} ${rec.name} ${badge}</h4>
-                        <p>Score: ${rec.score.toFixed(4)} | Risk: ${rec.risk_level}</p>
-                        <div class="score-bar"><div class="score-fill" style="width: ${scorePercent}%"></div></div>
-                        <p>${rec.explanation?.summary || 'No summary available'}</p>
-                        ${noteHtml}
-                        ${rec.explanation?.recommendation ? `<p><strong>Recommendation:</strong> ${rec.explanation.recommendation}</p>` : ''}
+        function renderContributionBars(contributions) {
+            const rows = [];
+            for (const [key, value] of Object.entries(contributions)) {
+                if (!criteriaKeys.includes(key)) continue;
+                const pct = Math.max(0, Math.min(100, Math.round(value * 100)));
+                rows.push(`
+                    <div>
+                        <div>${key} (${value.toFixed(3)})</div>
+                        <div class="bar"><span style="width:${pct}%"></span></div>
                     </div>
-                `;
-            });
-
-            // === REFINEMENT QUESTION SECTION ===
-            if (data.show_refinement) {
-                const predicted = data.refinement_context?.predicted || 'your interest';
-                const topNiche = data.refinement_context?.top_niche || 'another niche';
-
-                html += `
-                    <div class="refine-section">
-                        <h4>Refine the results?</h4>
-                        <p>${topNiche} ranked highest for quick side income, but your background is in ${predicted}. Which feels more right?</p>
-                        
-                        <label>
-                            <input type="radio" name="refine" value="fast" checked>
-                            Prioritize fastest side income (even if topic is different)
-                        </label>
-                        <label>
-                            <input type="radio" name="refine" value="balanced">
-                            Want balance — decent money + closer to my interests/skills
-                        </label>
-                        <label>
-                            <input type="radio" name="refine" value="passion">
-                            My main passion is ${predicted} — prioritize that even if money comes slower
-                        </label>
-                        
-                        <button onclick="refineRecommendations('${JSON.stringify(data.refinement_context?.original_parsed || {}).replace(/"/g, '&quot;')}')">Update Recommendations</button>
-                    </div>
-                `;
+                `);
             }
-
-            document.getElementById('results').innerHTML = html;
+            return rows.join("");
         }
 
-        // Real refinement call
-        async function refineRecommendations(originalParsedStr) {
-            const selected = document.querySelector('input[name="refine"]:checked');
-            if (!selected) {
-                alert("Please select an option");
-                return;
-            }
-            
-            const choice = selected.value;
-            
-            try {
-                const payload = {
-                    original_parsed: JSON.parse(originalParsedStr),
-                    choice: choice
-                };
-                
-                document.getElementById('results').innerHTML = '<p>Refining recommendations...</p>';
-                
-                const res = await fetch('/api/refine', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
-                
-                if (!res.ok) {
-                    const err = await res.json();
-                    document.getElementById('results').innerHTML = `<p style="color:red">Error: ${err.error || 'Unknown'}</p>`;
-                    return;
-                }
-                
-                const data = await res.json();
-                
-                // Re-render refined results
-                let html = '<h3>Refined Top 3 Niches</h3>';
-                html += `<div class="confidence">Refined with choice: ${data.refined_choice} • Confidence: ${data.sensitivity?.level || 'N/A'}</div>`;
-                
-                data.recommendations.forEach((rec, idx) => {
-                    const rank = idx + 1;
-                    const badge = rec.domain_match ? '<span class="domain-badge">Profession Match</span>' : '';
-                    const scorePercent = Math.round(rec.score * 100);
-                    
-                    let noteHtml = '';
-                    if (rank === 1 && !rec.domain_match) {
-                        noteHtml = '<div class="note">Top pick based on your refinement choice.</div>';
-                    }
-                    
-                    html += `
-                        <div class="result rank-${rank}">
-                            <h4>#${rank} ${rec.name} ${badge}</h4>
-                            <p>Score: ${rec.score.toFixed(4)} | Risk: ${rec.risk_level}</p>
-                            <div class="score-bar"><div class="score-fill" style="width: ${scorePercent}%"></div></div>
-                            <p>${rec.explanation?.summary || 'No summary'}</p>
-                            ${noteHtml}
-                            ${rec.explanation?.recommendation ? `<p><strong>Recommendation:</strong> ${rec.explanation.recommendation}</p>` : ''}
+        function renderRecommendationCard(rec) {
+            const strengths = (rec.explanation.strengths || []).map((s) => `<li>${s.criterion_label}: ${s.context}</li>`).join("");
+            const concerns = (rec.explanation.concerns || []).map((c) => `<li>${c.criterion_label}: ${c.context}</li>`).join("");
+            const comparisons = (rec.explanation.comparisons || []).map((c) => {
+                const icon = c.advantage ? "Advantage" : "Trade-off";
+                return `<li><strong>${icon}</strong> - ${c.message}</li>`;
+            }).join("");
+            const mitigation = (rec.explanation.risk_assessment.mitigation || []).map((m) => `<li>${m}</li>`).join("");
+
+            return `
+                <article class="rec-card rank-${rec.rank}">
+                    <div class="rec-head">
+                        <div><strong>#${rec.rank} ${rec.name}</strong></div>
+                        <div>
+                            <span class="pill ${riskClass(rec.risk_level)}">${rec.risk_level} risk</span>
+                            <span class="pill">Score ${rec.score}</span>
                         </div>
-                    `;
+                    </div>
+                    <p>${rec.explanation.summary}</p>
+                    <div class="section-title">Score Contribution Breakdown</div>
+                    ${renderContributionBars(rec.contributions)}
+                    <div class="section-title">Strengths</div>
+                    <ul>${strengths || "<li>No strong differentiators identified.</li>"}</ul>
+                    <div class="section-title">Concerns</div>
+                    <ul>${concerns || "<li>No major concern detected.</li>"}</ul>
+                    <div class="section-title">Why / Why Not</div>
+                    <ul>
+                        <li>${rec.explanation.recommendation}</li>
+                        <li>${rec.explanation.why_not_top}</li>
+                        <li>${rec.explanation.trade_offs.message}</li>
+                    </ul>
+                    <div class="section-title">Comparison Context</div>
+                    <ul>${comparisons || "<li>No strong head-to-head deltas.</li>"}</ul>
+                    <div class="section-title">Risk Mitigation</div>
+                    <ul>${mitigation || "<li>No mitigation required.</li>"}</ul>
+                </article>
+            `;
+        }
+
+        function renderResults(data) {
+            const recommendations = data.recommendations || [];
+            const top = recommendations[0];
+            document.getElementById("topPick").textContent = top ? `${top.name} (#1)` : "-";
+            document.getElementById("confidenceLevel").textContent = data.sensitivity?.confidence?.level || "-";
+            document.getElementById("confidenceDesc").textContent = data.sensitivity?.confidence?.description || "";
+            document.getElementById("counterfactualText").textContent = data.counterfactual?.message || "-";
+            document.getElementById("decisionMemo").textContent = data.decision_memo || "";
+
+            const html = recommendations.map(renderRecommendationCard).join("");
+            document.getElementById("recommendations").innerHTML = html || "<p>No recommendations generated.</p>";
+        }
+
+        async function evaluateNiches() {
+            clearError();
+            const evaluateBtn = document.getElementById("evaluateBtn");
+            evaluateBtn.disabled = true;
+            evaluateBtn.textContent = "Evaluating...";
+
+            try {
+                const textNiches = parseNichesFromText();
+                const csvNiches = await parseNichesFromCSV();
+                const niches = textNiches.length ? textNiches : csvNiches;
+
+                if (!niches.length) {
+                    throw new Error("Provide at least one niche (text or CSV).");
+                }
+
+                const profile = getProfilePayload();
+                const payload = { profile, niches };
+
+                const response = await fetch("/api/evaluate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
                 });
-                
-                document.getElementById('results').innerHTML = html;
-                
-            } catch (err) {
-                document.getElementById('results').innerHTML = `<p style="color:red">Refinement failed: ${err.message}</p>`;
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || "Evaluation failed.");
+                }
+
+                renderResults(data);
+                goToStep(3);
+            } catch (error) {
+                showError(error.message || "Unexpected error.");
+            } finally {
+                evaluateBtn.disabled = false;
+                evaluateBtn.textContent = "Evaluate Niches";
             }
         }
+
+        function loadSampleNiches() {
+            document.getElementById("niches").value = "AI Tools Explainers\nCoding Tutorials\nBook Reviews Channel";
+        }
+
+        function resetAll() {
+            window.location.reload();
+        }
+
+        document.getElementById("profession").addEventListener("change", validateStep1);
+        document.getElementById("goal").addEventListener("change", validateStep1);
+        validateStep1();
     </script>
 </body>
 </html>

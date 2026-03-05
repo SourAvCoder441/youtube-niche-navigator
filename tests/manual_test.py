@@ -1,10 +1,10 @@
 """
-Manual test script for decision engine with 10 niches.
+Manual test script for the deterministic decision engine.
 Run with: python -m tests.manual_test
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -18,135 +18,100 @@ from decision_engine.validator import validate_weights, validate_goal
 
 
 def print_section(title):
-    """Print formatted section header."""
-    print(f"\n{'='*70}")
+    print("\n" + "=" * 72)
     print(f"  {title}")
-    print('='*70)
+    print("=" * 72)
 
 
 def main():
-    """Run comprehensive manual test with 10 niches."""
-    
-    print_section("NicheNavigator - Day 3: 10 Niches Test")
-    
-    print(f"\nLoaded {len(NICHES)} niches:")
-    for name in NICHES:
-        print(f"  • {name}")
-    
-    # Test inputs
+    print_section("NicheNavigator Manual Engine Test")
+    print(f"Loaded {len(NICHES)} predefined niches")
+
     base_weights = {
         "skill": 7,
         "time": 6,
         "monetization": 8,
         "competition": 5,
         "growth": 7,
-        "investment": 4
+        "investment": 4,
     }
     goal = "side_income"
-    
-    print(f"\nBase Weights: {base_weights}")
-    print(f"Selected Goal: {goal}")
-    
-    # Validation
-    print_section("Input Validation")
-    try:
-        validate_weights(base_weights)
-        validate_goal(goal)
-        print("✓ All inputs valid")
-    except Exception as e:
-        print(f"✗ Validation failed: {e}")
-        return
-    
-    # Weight adjustment
+
+    print("\nInput")
+    print(f"Base weights: {base_weights}")
+    print(f"Goal: {goal}")
+
+    print_section("Validation")
+    validate_weights(base_weights)
+    validate_goal(goal)
+    print("Validation passed")
+
     print_section("Weight Adjustment")
-    weights = adjust_weights(base_weights, goal)
-    print(f"Adjusted Weights (normalized to 1.0):")
-    for criterion, weight in weights.items():
-        base = base_weights[criterion]
-        change = "↑" if weight > base/10 else "↓" if weight < base/10 else "="
-        print(f"  {criterion:15} {base:2} → {weight:.3f} {change}")
-    
-    # Scoring
-    print_section("Scoring Results (Top 5 of 10)")
-    scores = calculate_scores(NICHES, weights)
+    adjusted_weights = adjust_weights(base_weights, goal)
+    for criterion, value in adjusted_weights.items():
+        print(f"{criterion:14}: {value:.3f}")
+
+    print_section("Scoring")
+    scores = calculate_scores(NICHES, adjusted_weights)
     ranked = rank_niches(scores)
-    
-    print(f"{'Rank':<6} {'Niche':<30} {'Score':<8} {'Risk':<10} {'Key Driver'}")
-    print("-" * 75)
-    
-    for rank, (niche_name, data) in enumerate(ranked[:5], 1):
-        attrs = NICHES[niche_name]["attributes"]
+    print(f"{'Rank':<6}{'Niche':<34}{'Score':<8}{'Risk':<10}")
+    print("-" * 72)
+    for rank, (name, score_data) in enumerate(ranked[:5], 1):
+        risk_score, risk_level = calculate_risk(NICHES[name]["attributes"])
+        print(f"{rank:<6}{name:<34}{score_data['final_score']:<8.4f}{risk_level:<10}")
+
+    print_section("Explanations (Top 3)")
+    all_niche_data = {
+        name: {"attributes": NICHES[name]["attributes"], "score": score_data["final_score"]}
+        for name, score_data in scores.items()
+    }
+
+    for rank, (name, score_data) in enumerate(ranked[:3], 1):
+        attrs = NICHES[name]["attributes"]
         risk_score, risk_level = calculate_risk(attrs)
-        top_criterion = max(data["contributions"].items(), key=lambda x: x[1])
-        print(f"{rank:<6} {niche_name:<30} {data['final_score']:.4f}   {risk_level:<10} {top_criterion[0]}")
-    
-    # Detailed Analysis for Top 3
-    print_section("Top 3 Detailed Explanations")
-    
-    # Prepare all niche data for comparisons
-    all_niche_data = {name: {"attributes": NICHES[name]["attributes"], "score": data["final_score"]} 
-                      for name, data in scores.items()}
-    
-    for rank, (niche_name, data) in enumerate(ranked[:3], 1):
-        attributes = NICHES[niche_name]["attributes"]
-        risk_score, risk_level = calculate_risk(attributes)
-        
         explanation = generate_explanation(
-            niche_name, 
-            attributes, 
-            data["contributions"],
+            name,
+            attrs,
+            score_data["contributions"],
             risk_score,
             risk_level,
-            weights,
+            adjusted_weights,
             all_niche_data,
-            ranked
+            ranked,
         )
-        
-        print(f"\n{'─'*70}")
-        print(f"#{rank} {niche_name}")
-        print(f"{'─'*70}")
-        print(f"Score: {data['final_score']:.4f} | Risk: {risk_level} ({risk_score})")
-        print(f"\nSummary: {explanation['summary']}")
-        
-        if explanation['strengths']:
-            print(f"\nStrengths:")
-            for s in explanation['strengths']:
-                print(f"  ✓ {s['criterion_label']} ({s['raw_score']}/10, {s['percentile']}th percentile)")
-                print(f"    {s['context']}")
-        
-        if explanation['comparisons']:
-            print(f"\nComparisons:")
-            for c in explanation['comparisons']:
-                icon = "↑" if c['advantage'] else "→"
-                print(f"  {icon} {c['message']}")
-        
-        if explanation['trade_offs'] and not explanation['trade_offs']['is_winner']:
-            print(f"\nTrade-offs: {explanation['trade_offs']['message']}")
-        
-        print(f"\nRecommendation: {explanation['recommendation']}")
-    
-    # Sensitivity Analysis for Top Recommendation
-    print_section("Sensitivity Analysis (Winner Stability)")
+
+        print("\n" + "-" * 72)
+        print(f"#{rank} {name}")
+        print(f"Score: {score_data['final_score']:.4f} | Risk: {risk_level} ({risk_score})")
+        print(f"Summary: {explanation['summary']}")
+        print(f"Why not top: {explanation['why_not_top']}")
+        print(f"Trade-off: {explanation['trade_offs']['message']}")
+
+        if explanation["comparisons"]:
+            print("Comparisons:")
+            for comp in explanation["comparisons"]:
+                mark = "ADV" if comp["advantage"] else "TRADEOFF"
+                print(f"  [{mark}] {comp['message']}")
+
+    print_section("Sensitivity")
     sensitivity = analyze_sensitivity(NICHES, base_weights, goal)
-    
     winner = ranked[0][0]
-    winner_stability = sensitivity['stability_analysis'][winner]
-    
+    winner_stability = sensitivity["stability_analysis"][winner]
+    confidence = sensitivity["confidence"]
+
     print(f"Winner: {winner}")
-    print(f"Confidence: {sensitivity['confidence']['level']}")
-    print(f"Assessment: {sensitivity['confidence']['description']}")
-    print(f"\nWinner Stability: {winner_stability['stability_score']:.0%} "
-          f"(ranked #{winner_stability['most_common_rank']} in {winner_stability['stability_score']:.0%} of scenarios)")
-    
-    if sensitivity['alternative_scenarios']:
-        print(f"\nAlternative Winners:")
-        for alt in sensitivity['alternative_scenarios'][:3]:
-            print(f"  • {alt['scenario']}: {alt['winner']}")
-            print(f"    {alt['implication']}")
-    
-    print_section("Test Complete")
-    print(f"✓ All {len(NICHES)} niches evaluated successfully")
-    print("Ready for web interface integration (Day 4).")
+    print(f"Confidence: {confidence['level']}")
+    print(f"Confidence note: {confidence['description']}")
+    print(f"Winner stability score: {winner_stability['stability_score']:.2f}")
+    print(f"Winner flip ratio: {sensitivity['test_parameters']['winner_flip_ratio']:.2f}")
+
+    if sensitivity["alternative_scenarios"]:
+        print("\nAlternative scenarios:")
+        for alt in sensitivity["alternative_scenarios"]:
+            print(f"- {alt['scenario']}: winner changes to {alt['winner']}")
+
+    print_section("Completed")
+    print("Deterministic engine checks completed.")
 
 
 if __name__ == "__main__":

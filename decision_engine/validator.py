@@ -3,98 +3,82 @@ Input validation module for decision engine.
 Ensures data integrity before processing.
 """
 
+from decision_engine.criteria import CRITERIA
+
+REQUIRED_CRITERIA = set(CRITERIA.keys())
+VALID_GOALS = {"side_income", "long_term", "passion", None}
+
 
 class ValidationError(Exception):
     """Custom exception for validation failures."""
-    pass
+
+
+def _is_number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
 def validate_weights(weights):
-    """
-    Validate user-provided weights.
-    
-    Args:
-        weights: Dict of criterion weights
-    
-    Raises:
-        ValidationError: If weights are invalid
-    """
     if not isinstance(weights, dict):
         raise ValidationError("Weights must be provided as a dictionary")
-    
-    required_criteria = {"skill", "time", "monetization", "competition", "growth", "investment"}
-    
-    # Check all required keys present
-    missing = required_criteria - set(weights.keys())
+
+    missing = REQUIRED_CRITERIA - set(weights.keys())
     if missing:
-        raise ValidationError(f"Missing required criteria: {missing}")
-    
-    # Check no extra keys
-    extra = set(weights.keys()) - required_criteria
+        raise ValidationError(f"Missing required criteria: {sorted(missing)}")
+
+    extra = set(weights.keys()) - REQUIRED_CRITERIA
     if extra:
-        raise ValidationError(f"Unknown criteria provided: {extra}")
-    
-    # Validate each weight
+        raise ValidationError(f"Unknown criteria provided: {sorted(extra)}")
+
     for criterion, value in weights.items():
-        if not isinstance(value, (int, float)):
-            raise ValidationError(f"Weight for '{criterion}' must be numeric, got {type(value)}")
-        
-        if not 1 <= value <= 10:
+        if not _is_number(value):
+            raise ValidationError(f"Weight for '{criterion}' must be numeric")
+        if not 1 <= float(value) <= 10:
             raise ValidationError(f"Weight for '{criterion}' must be between 1 and 10, got {value}")
-    
     return True
 
 
 def validate_goal(goal):
-    """
-    Validate goal selection.
-    
-    Args:
-        goal: String goal identifier or None
-    
-    Raises:
-        ValidationError: If goal is invalid
-    """
-    valid_goals = {"side_income", "long_term", "passion", None}
-    
-    if goal not in valid_goals:
-        raise ValidationError(f"Invalid goal '{goal}'. Must be one of: {valid_goals}")
-    
+    if goal not in VALID_GOALS:
+        raise ValidationError(f"Invalid goal '{goal}'. Must be one of: {sorted(g for g in VALID_GOALS if g)} or None")
     return True
 
 
+def validate_niche_attributes(niche_name, attrs):
+    if not isinstance(attrs, dict):
+        raise ValidationError(f"Niche '{niche_name}' attributes must be a dictionary")
+
+    missing = REQUIRED_CRITERIA - set(attrs.keys())
+    if missing:
+        raise ValidationError(f"Niche '{niche_name}' missing attributes: {sorted(missing)}")
+
+    extra = set(attrs.keys()) - REQUIRED_CRITERIA
+    if extra:
+        raise ValidationError(f"Niche '{niche_name}' has unknown attributes: {sorted(extra)}")
+
+    cleaned = {}
+    for criterion in REQUIRED_CRITERIA:
+        value = attrs.get(criterion)
+        if value is None:
+            raise ValidationError(f"Niche '{niche_name}' attribute '{criterion}' is missing")
+        if not _is_number(value):
+            raise ValidationError(f"Niche '{niche_name}' attribute '{criterion}' must be numeric")
+        num = float(value)
+        if not 1 <= num <= 10:
+            raise ValidationError(
+                f"Niche '{niche_name}' attribute '{criterion}' must be between 1 and 10, got {value}"
+            )
+        cleaned[criterion] = num
+    return cleaned
+
+
 def validate_niche_data(niches):
-    """
-    Validate niche profile data structure.
-    
-    Args:
-        niches: Dict of niche profiles
-    
-    Raises:
-        ValidationError: If structure is invalid
-    """
-    if not niches:
+    if not niches or not isinstance(niches, dict):
         raise ValidationError("At least one niche must be provided")
-    
-    required_attribute_keys = {"skill", "time", "monetization", "competition", "growth", "investment"}
-    
+
     for niche_name, data in niches.items():
         if not isinstance(data, dict):
-            raise ValidationError(f"Niche '{niche_name}' data must be a dict")
-        
+            raise ValidationError(f"Niche '{niche_name}' data must be a dictionary")
         if "attributes" not in data:
             raise ValidationError(f"Niche '{niche_name}' missing 'attributes' key")
-        
-        attrs = data["attributes"]
-        missing_attrs = required_attribute_keys - set(attrs.keys())
-        if missing_attrs:
-            raise ValidationError(f"Niche '{niche_name}' missing attributes: {missing_attrs}")
-        
-        # Validate score ranges
-        for attr, score in attrs.items():
-            if not isinstance(score, (int, float)):
-                raise ValidationError(f"Niche '{niche_name}' attribute '{attr}' must be numeric")
-            if not 1 <= score <= 10:
-                raise ValidationError(f"Niche '{niche_name}' attribute '{attr}' must be 1-10, got {score}")
-    
+        data["attributes"] = validate_niche_attributes(niche_name, data["attributes"])
     return True
