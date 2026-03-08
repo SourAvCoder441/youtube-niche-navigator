@@ -259,6 +259,23 @@
             color: var(--muted);
         }
 
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--accent);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .hidden { display: none !important; }
+
         @media (max-width: 860px) {
             .grid { grid-template-columns: 1fr; }
             .weight-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -281,6 +298,15 @@
             <span class="badge">No black-box AI in ranking logic</span>
         </section>
 
+        <!-- About section -->
+        <section class="panel" style="margin-top: 10px; background: #eef4f0;">
+            <p style="margin: 0; font-size: 0.95rem;">
+                <strong>🔍 About this tool:</strong> Uses a deterministic weighted scoring model – 
+                <strong>no AI</strong> is used in the ranking logic. All calculations are transparent and reproducible. 
+                Change your inputs and see how the recommendations shift.
+            </p>
+        </section>
+
         <section id="step1" class="panel step active">
             <h2 class="step-title">Step 1: Profile and Goal</h2>
             <div class="grid">
@@ -291,7 +317,9 @@
                         {% for prof in professions %}
                             <option value="{{ prof }}">{{ prof }}</option>
                         {% endfor %}
+                        <option value="other">Other (please specify)</option>
                     </select>
+                    <input type="text" id="professionOther" placeholder="Enter your profession" style="margin-top: 8px; display: none;">
                 </div>
                 <div class="field">
                     <label for="hours_per_week">Hours available per week</label>
@@ -337,7 +365,7 @@
                 <div class="field">
                     <label for="csvFile">Or upload CSV</label>
                     <input type="file" id="csvFile" accept=".csv">
-                    <div class="help">CSV columns: niche_name,skill,time,monetization,competition,growth,investment</div>
+                    <div class="help">CSV columns: niche_name,skill,time,monetization,competition,growth,investment (all 1‑10)</div>
                     <button type="button" class="btn btn-secondary" onclick="loadSampleNiches()">Load sample options</button>
                 </div>
             </div>
@@ -357,6 +385,7 @@
             <div class="controls">
                 <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
                 <button class="btn btn-primary" onclick="evaluateNiches()" id="evaluateBtn">Evaluate Niches</button>
+                <span id="loadingSpinner" class="spinner hidden"></span>
             </div>
         </section>
 
@@ -392,15 +421,39 @@
     <script>
         const criteriaKeys = ["skill", "time", "monetization", "competition", "growth", "investment"];
 
+        // ----- "Other" profession logic -----
+        const professionSelect = document.getElementById("profession");
+        const professionOther = document.getElementById("professionOther");
+        const goalSelect = document.getElementById("goal");
+
+        function validateStep1() {
+            const profession = professionSelect.value;
+            const goal = goalSelect.value.trim();
+            let otherValid = true;
+            if (profession === "other") {
+                otherValid = professionOther.value.trim() !== "";
+            }
+            document.getElementById("step1Next").disabled = !(profession && goal && otherValid);
+        }
+
+        professionSelect.addEventListener("change", function() {
+            if (this.value === "other") {
+                professionOther.style.display = "block";
+                professionOther.setAttribute("required", "required");
+            } else {
+                professionOther.style.display = "none";
+                professionOther.removeAttribute("required");
+            }
+            validateStep1();
+        });
+
+        professionOther.addEventListener("input", validateStep1);
+        goalSelect.addEventListener("change", validateStep1);
+
+        // ----- Step navigation -----
         function goToStep(step) {
             document.querySelectorAll(".step").forEach((panel) => panel.classList.remove("active"));
             document.getElementById(`step${step}`).classList.add("active");
-        }
-
-        function validateStep1() {
-            const profession = document.getElementById("profession").value.trim();
-            const goal = document.getElementById("goal").value.trim();
-            document.getElementById("step1Next").disabled = !(profession && goal);
         }
 
         function showError(message) {
@@ -480,10 +533,14 @@
         }
 
         function getProfilePayload() {
+            let profession = professionSelect.value;
+            if (profession === "other") {
+                profession = professionOther.value.trim();
+            }
             return {
-                profession: document.getElementById("profession").value,
+                profession: profession,
                 hours_per_week: document.getElementById("hours_per_week").value,
-                goal: document.getElementById("goal").value || null,
+                goal: goalSelect.value || null,
                 priorities: document.getElementById("priorities").value
                     .split(",")
                     .map((x) => x.trim())
@@ -530,8 +587,8 @@
                     <div class="rec-head">
                         <div><strong>#${rec.rank} ${rec.name}</strong></div>
                         <div>
-                            <span class="pill ${riskClass(rec.risk_level)}">${rec.risk_level} risk</span>
-                            <span class="pill">Score ${rec.score}</span>
+                            <span class="pill ${riskClass(rec.risk_level)}"><strong>${rec.risk_level} risk</strong></span>
+                            <span class="pill"><strong>Score ${rec.score}</strong></span>
                         </div>
                     </div>
                     <p>${rec.explanation.summary}</p>
@@ -571,8 +628,9 @@
         async function evaluateNiches() {
             clearError();
             const evaluateBtn = document.getElementById("evaluateBtn");
+            const spinner = document.getElementById("loadingSpinner");
             evaluateBtn.disabled = true;
-            evaluateBtn.textContent = "Evaluating...";
+            spinner.classList.remove("hidden");
 
             try {
                 const textNiches = parseNichesFromText();
@@ -603,7 +661,7 @@
                 showError(error.message || "Unexpected error.");
             } finally {
                 evaluateBtn.disabled = false;
-                evaluateBtn.textContent = "Evaluate Niches";
+                spinner.classList.add("hidden");
             }
         }
 
@@ -615,8 +673,7 @@
             window.location.reload();
         }
 
-        document.getElementById("profession").addEventListener("change", validateStep1);
-        document.getElementById("goal").addEventListener("change", validateStep1);
+        // Initial validation call
         validateStep1();
     </script>
 </body>

@@ -181,12 +181,13 @@ def build_trade_offs(attributes, winner_attrs, niche_name, winner_name):
 
 
 def build_why_not_narrative(concerns, winner_name, is_winner):
+    """Updated to directly compare to the winner."""
     if is_winner:
         return "No major blockers under current priorities."
     if not concerns:
         return f"Main reason not ranked #1: {winner_name} has a better weighted balance."
     top_concern = concerns[0]["criterion_label"]
-    return f"Main reason not ranked #1: weaker performance in {top_concern} for current weights."
+    return f"Main reason not ranked #1: {winner_name} outperforms you in {top_concern}."
 
 
 def generate_final_recommendation(rank, risk_level, strength_count, concern_count):
