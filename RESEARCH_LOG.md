@@ -397,4 +397,38 @@ Parser is **peripheral layer** by design. Core engine untouched.
 - Shifted from "recommend top 3" to "evaluate user niches" mindset
 - UI now feels more like a companion (asks user to clarify intent when mismatch occurs)
 
+## Day 9 – Final Polish 
+
+**Objective:** Improve UI/UX and explanation clarity based on feedback from the final review.
+
+### AI Prompts Used
+
+- *“Generate a CSS loading spinner that can be toggled with JavaScript.”*
+- *“How to disable a button and show a spinner during fetch requests in vanilla JavaScript.”*
+- *“Write a short ‘About this tool’ paragraph explaining deterministic scoring and no AI usage.”*
+
+All code snippets were adapted and integrated into the existing HTML/JS.
+
+### Search Queries
+
+- “Best practices for form validation feedback”
+- “Nielsen Norman progressive disclosure” (to ensure the about section is concise)
+- “Material Design card layout for recommendations”
+
+### References
+
+- [MDN Web Docs – Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) – used for the spinner implementation.
+- [CSS-Tricks – Spinner examples](https://css-tricks.com/) – inspired the spinner design.
+- [Nielsen Norman Group – Transparency in Decision Support](https://www.nngroup.com/) – reinforced the need for an explicit “no AI” statement.
+
+### What Was Accepted/Modified/Rejected
+
+- **Accepted:** Spinner code and about section text (slightly reworded to match the project tone).
+- **Modified:** The spinner was placed next to the Evaluate button, not replacing it, to keep the layout stable.
+- **Rejected:** Adding a second spinner inside the button – decided one spinner is enough.
+
+### AI Usage Boundaries
+
+All changes were **cosmetic or explanatory** – no AI influenced the scoring logic or decision engine. The `build_why_not_narrative` change was written manually to ensure accuracy.
+
 

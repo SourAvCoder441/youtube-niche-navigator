@@ -289,7 +289,7 @@ Built natural language input system and Flask web layer.
 - ValidationError (400) for unparseable prompts
 - Generic 500 for processing failures (don't expose internals)
 
-## Day 8 – UI Refinements, Refinement Questions, and Personalization Improvements (March 03, 2026)
+## Day 8 – UI Refinements, Refinement Questions, and Personalization Improvements 
 
 Today, focused on addressing UI usability issues and improving recommendation personalization to handle cases where passion/interest mismatches with side_income rankings (e.g., gamer getting finance niches).
 
@@ -324,3 +324,34 @@ Today, focused on addressing UI usability issues and improving recommendation pe
 **Reason:** User should still see objective trade-offs.
 
 **Trade-off:** Added one extra user click for mismatches, but improves personalization and satisfaction.
+
+
+## Day 9 – Final Polish 
+
+With the core functionality complete and all modules working, I turned my attention to **user experience and clarity** – the small touches that make the tool feel professional and trustworthy.
+
+### UI Refinements
+
+- **Loading spinner** – The backend evaluation can take a second, especially with sensitivity analysis. Adding a spinner gives immediate feedback that work is in progress.
+- **About section** – A short panel at the top now explicitly states that the ranking uses **deterministic weighted scoring** and **no AI**. This directly addresses the assignment’s transparency requirement and builds user trust.
+- **Bold important numbers** – Risk level and score are now bolded in the result pills, making them stand out at a glance.
+- **CSV help text** – The placeholder now clearly states that all attribute values must be between 1 and 10.
+
+### Explanation Enhancement
+
+I revised the `build_why_not_narrative` function to **always mention the winner by name**. Instead of a generic “weaker performance”, it now says *“Main reason not ranked #1: [winner] outperforms you in [criterion].”* This makes the comparison concrete and actionable.
+
+### Testing
+
+- Tested with both text‑only input and CSV upload.
+- Verified that the spinner appears and disappears correctly.
+- Checked that the “About” section does not interfere with the layout on mobile.
+
+### Alternatives Considered
+
+- **Tooltips for criteria** – I thought about adding question‑mark tooltips explaining each weight slider, but the current helper text under each slider is sufficient for now.
+- **Client‑side CSV validation** – I considered using Papa Parse for frontend validation, but decided the backend already catches errors and returns clear messages. The extra library wasn’t justified for the scope.
+
+### Reflection
+
+This polish round reminded me that **small UX improvements can have a big impact on perceived quality**. The project now feels complete and ready for submission.

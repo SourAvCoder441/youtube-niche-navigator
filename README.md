@@ -1,186 +1,185 @@
-# NicheNavigator  
-### A Structured Decision Companion for Aspiring YouTube Creators
+# NicheNavigator – Decision Companion for YouTube Niches
+
+**NicheNavigator** helps aspiring YouTubers choose a content niche by weighing personal goals against objective niche characteristics. It uses a transparent, deterministic multi‑criteria scoring model – **no black‑box AI** – so you always understand why a recommendation is made.
 
 ---
 
-## 1. Problem Understanding
+## 📖 Table of Contents
 
-Starting a YouTube channel is a complex decision involving multiple trade-offs.  
-An aspiring creator must balance:
-
-- Skill alignment
-- Time availability
-- Monetization potential
-- Competition intensity
-- Growth opportunities
-- Initial investment requirements
-
-These factors are often evaluated intuitively, leading to poor alignment and burnout.
-
-This system models the decision as a **multi-criteria weighted evaluation problem** and provides structured, explainable recommendations.
-
-The goal is not to predict success, but to support rational decision-making.
+- [Overview](#overview)
+- [How It Works](#how-it-works)
+- [Input Methods](#input-methods)
+  - [Text Box (Quick Entry)](#text-box-quick-entry)
+  - [CSV Upload (Full Control)](#csv-upload-full-control)
+- [Scoring Methodology](#scoring-methodology)
+- [Risk Model](#risk-model)
+- [Interpreting the Results](#interpreting-the-results)
+- [Assumptions & Limitations](#assumptions--limitations)
+- [Running the Project](#running-the-project)
+- [Future Improvements](#future-improvements)
+- [Technology Stack](#technology-stack)
 
 ---
 
-## 2. System Overview
+## Overview
 
-NicheNavigator evaluates predefined YouTube niches using:
+Starting a YouTube channel involves multiple trade‑offs: skill alignment, time commitment, monetization potential, competition, growth prospects, and initial investment. Most creators rely on intuition, which can lead to mismatched choices and burnout.
 
-- User-defined weight preferences
-- Goal-based automatic weight adjustments
-- Normalized scoring
-- Risk modeling
-- Ranked recommendations (Top 3)
-- **Comparative explanations** with percentile rankings
-
-The system is deterministic and does not rely on black-box AI for final decision-making.
+NicheNavigator models this decision as a **weighted multi‑criteria evaluation**. You provide your background, goals, and a list of niche ideas – the system scores each niche, ranks them, and explains the reasoning. All calculations are deterministic and transparent.
 
 ---
 
-## 3. Architecture
+## How It Works
 
-The system is divided into modular components:
+1. **Step 1 – Profile & Goal**  
+   - Select your profession (or choose “Other” and type your own).  
+   - Indicate weekly hours available.  
+   - Choose your primary goal: side income, long‑term career, or passion.  
+   - Optionally list comma‑separated priorities and constraints (e.g., “growth, low competition”, “limited time, low budget”).  
 
-1. Web Layer (Flask Interface – Day 4)
-2. Decision Engine (Scoring Logic)
-3. Weight Adjustment Module
-4. Risk Analysis Module
-5. Explanation Module (with comparison context)
-6. Sensitivity Analysis Module
+2. **Step 2 – Options & Weights**  
+   - Enter niche names (one per line) **or** upload a CSV file with your own attribute scores.  
+   - Adjust the six criterion weights manually if desired (otherwise they are auto‑tuned based on your goal).  
 
-The decision engine is fully independent of the web layer for testability and modularity.
+3. **Step 3 – Results**  
+   - View the top recommendation, confidence level, and a counterfactual (which niche would win if priorities shifted).  
+   - For each evaluated niche, see a detailed card with:  
+     - Rank, name, risk level, score (bolded).  
+     - Score contribution bars.  
+     - Strengths, concerns, and risk mitigation advice.  
+     - Comparison with the runner‑up and winner.  
 
----
-
-## 4. Decision Criteria
-
-Each niche is evaluated across six criteria:
-
-- Skill Alignment (maximize)
-- Time Compatibility (maximize)
-- Monetization Potential (maximize)
-- Competition Level (minimize)
-- Growth Potential (maximize)
-- Initial Investment (minimize)
+All logic is rule‑based – the ranking engine never uses AI.
 
 ---
 
-## 5. Scoring Methodology
+## Input Methods
 
-### Normalization
+### Text Box (Quick Entry)
 
-For maximize criteria:
-(value - min) / (max - min)
+Type one niche per line, e.g.:
+Gaming Shorts
+AI Tool Reviews
+Python Tutorials
 
-For minimize criteria:
-(max - value) / (max - min)
 
-### Final Score
+The system **estimates** the six attributes for each niche using a built‑in keyword mapping. If a niche is not recognised, it falls back to average scores (5 across all criteria) and shows a warning.
 
-Final Score = Σ(weight × normalized_value)
+### CSV Upload (Full Control)
 
-Weights are:
+For precise control, upload a CSV file with the following columns:
 
-- Provided by the user (1–10 scale)
-- Adjusted based on user goal
-- Normalized to sum = 1
+| Column        | Description                                  | Range  |
+|---------------|----------------------------------------------|--------|
+| `niche_name`  | Name of the niche (will appear in results)   | text   |
+| `skill`       | How much expertise is required                | 1–10   |
+| `time`        | Time efficiency (higher = less time needed)   | 1–10   |
+| `monetization`| Revenue potential                             | 1–10   |
+| `competition` | How crowded the niche is                      | 1–10   |
+| `growth`      | Audience growth potential                     | 1–10   |
+| `investment`  | Upfront cost (higher = cheaper to start)      | 1–10   |
 
----
+**Example `my_niches.csv`**:
+```csv
+niche_name,skill,time,monetization,competition,growth,investment
+Gaming Shorts,3,4,5,9,6,7
+AI Tool Reviews,7,5,8,5,8,4
+Python Tutorials,9,6,7,7,7,3
 
-## 6. Risk Model
+After uploading, the system uses your exact scores instead of estimating.
 
-Risk Index is calculated as:
+⚠️ All attribute values must be integers or decimals between 1 and 10. Missing values will cause an error.
 
-0.4 × Competition  
-+ 0.3 × Investment  
-+ 0.3 × (10 - Skill Alignment)
+Scoring Methodology
+Normalisation
+For maximise criteria (skill, time, monetisation, growth):
+normalised = (value - min) / (max - min)
 
-Risk Levels:
+For minimise criteria (competition, investment):
+normalised = (max - value) / (max - min)
 
-- ≥ 7 → High
-- 4–7 → Moderate
-- &lt; 4 → Low
+Weighted Score
+final_score = Σ ( weight[c] × normalised[c] )
 
----
+Weights are either:
+The custom weights you set in Step 2 (each 1–10, higher means more important), or
+Automatically adjusted based on your goal if you leave custom weights at default.
 
-## 7. Modeled Niches
+Risk Model
+Risk is calculated as a combination of competition, investment, and skill (inverted): 
+risk = 0.4 × competition + 0.3 × investment + 0.3 × (10 - skill)
 
-The system evaluates 10 niches across the risk/reward spectrum:
+Risk Score	Level
+≥ 7	High
+4 – 6.9	Moderate
+< 4	Low
 
-| Niche | Skill | Competition | Key Characteristic |
-|-------|-------|-------------|-------------------|
-| Coding Tutorials | 9 | 8 | Technical expertise required |
-| AI Tools & Tech Explainers | 8 | 6 | Trending, fast monetization |
-| Gaming Content | 5 | 9 | High competition, entertainment-driven |
-| Personal Finance | 7 | 7 | High trust barrier, strong CPM |
-| Creative Design | 8 | 6 | Portfolio-based, visual skill |
-| Health & Fitness | 6 | 8 | YMYL category, results-based credibility |
-| Productivity & Lifestyle | 4 | 9 | Low barrier, "beginner trap" |
-| Book Reviews & Literature | 5 | 5 | Minimal investment, slow growth |
-| Business & Entrepreneurship | 7 | 7 | Credibility-dependent, high monetization |
-| Science & Education | 9 | 5 | High accuracy, expertise barrier |
 
-These niches were selected to represent varying trade-offs in competition, monetization, effort, and risk profiles.
+Interpreting the Results
+After evaluation, the results page shows:
 
----
+Top Recommendation – the highest‑scoring niche.
 
-## 8. Assumptions & Justification
+Confidence – derived from sensitivity analysis (how stable the ranking is under small weight changes).
 
-The scoring values assigned to each niche are structured estimates based on:
+Counterfactual – which niche would win if your priorities shifted.
 
-- Observed YouTube ecosystem patterns (2024-2025)
-- Creator economy trends and CPM data
-- General market behavior
-- Category saturation characteristics
+Each niche card includes:
 
-The system prioritizes **relative comparison** rather than exact prediction.
+Strengths – criteria where the niche excels, with contextual advice.
 
----
+Concerns – weakest areas and potential pitfalls.
 
-## 9. Limitations
+Why / Why Not – a short recommendation, why it’s not #1 (if applicable), and trade‑offs vs. the winner.
 
-- Scores are relative and simplified.
-- Real-world outcomes depend heavily on execution quality.
-- Market dynamics evolve rapidly.
-- Personal differentiation strategies are not modeled.
-- 10 niches provide coverage but not exhaustive options.
+Comparison Context – head‑to‑head comparisons with the runner‑up.
 
----
+Risk Mitigation – practical steps to reduce risk if you choose this niche.
 
-## 10. How to Run
 
-1. Activate virtual environment
-2. Install dependencies:
-   pip install -r requirements.txt
-3. Run tests:
-   python -m tests.manual_test
+Assumptions & Limitations
+Attribute scores for built‑in niches are based on 2024‑2025 YouTube trends and are estimates, not guarantees.
 
-(Day 4: Web interface with prompt-based input coming next.)
+The system assumes all criteria are independent – in reality, some may correlate (e.g., high competition often means higher skill).
 
----
+Risk model is a simple linear combination; real‑world risk involves many more factors.
 
-## 11. Future Improvements
+Only up to 12 niches can be evaluated at once to keep the interface clear.
 
-- [x] Sensitivity analysis
-- [x] Dynamic niche expansion (10 niches)
-- [x] Enhanced explanations with comparison context
-- [ ] Natural language prompt input
-- [ ] Web interface with interactive visualizations
-- [ ] Growth advisor module (post-selection guidance)
-- [ ] Data-driven niche modeling using public datasets
+The tool is not a crystal ball – it’s a thinking aid. Your execution, consistency, and creativity matter most.
 
----
 
-## 12. Decision Transparency
+Running the Project
 
-### Why deterministic scoring over AI?
+1.Clone the repository.
 
-We explicitly chose weighted multi-criteria decision analysis (MCDA) because:
-- **Explainability**: Every score can be traced to specific criteria weights
-- **User control**: Users can adjust weights and immediately see impact
-- **No data dependency**: Works without training data or API calls
-- **Predictable behavior**: Same inputs always produce same outputs
+2. Set up a virtual environment and install dependencies:
+python -m venv venv
+source venv/bin/activate      # on Windows: venv\Scripts\activate
+pip install -r requirements.txt
 
-### Scoring Formula
-For each niche N:
+3. Run the Flask app:
+python web/app.py
+
+4. Open your browser at http://127.0.0.1:5000.
+
+5. Also deployed on Render : https://youtube-niche-navigator-1.onrender.com/
+
+
+Future Improvements
+User‑defined criteria – let users add their own evaluation dimensions.
+
+Data‑driven scores – integrate with public APIs (e.g., YouTube search volume) to update niche attributes automatically.
+
+More explanation formats – e.g., printable summary, comparison matrix.
+
+Mobile app – wrap the current logic in a React Native frontend.
+
+Technology Stack
+Backend: Python, Flask
+
+Decision Engine: Pure Python (no ML/AI libraries)
+
+Frontend: HTML, CSS, JavaScript (vanilla)
+
+Data Format: JSON for API, CSV for upload
